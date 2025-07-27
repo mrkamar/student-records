@@ -1,4 +1,5 @@
 {
-  "status": "on",
-  "message": "Student search is active."
+  "status": "off",
+  "message": "Tool disabled by admin. Try again later.",
+  "adminKey": "17760"
 }
