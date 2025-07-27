@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Student Records Search</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  /* Base */
+  body {
+    margin: 0;
+    background-color: #121214;
+    color: #e0e0e0;
+    font-family: 'Fira Mono', Consolas, 'Courier New', monospace;
+  }
+
+  /* Terminal container */
+  .terminal {
+    background: linear-gradient(145deg, #1f2024, #18191d);
+    border-radius: 12px;
+    max-width: 900px;
+    margin: 20px auto;
+    padding: 20px 25px;
+    box-shadow:
+      inset 0 0 15px rgba(255, 255, 255, 0.07),
+      0 4px 15px rgba(0, 0, 0, 0.7);
+    color: #7affc4;
+    font-size: 15px;
+    line-height: 1.4;
+    height: 220px;
+    overflow-y: auto;
+    user-select: text;
+    white-space: pre-wrap;
+  }
+
+  /* Scrollbar for terminal */
+  .terminal::-webkit-scrollbar {
+    width: 8px;
+  }
+  .terminal::-webkit-scrollbar-track {
+    background: #121214;
+    border-radius: 8px;
+  }
+  .terminal::-webkit-scrollbar-thumb {
+    background: #7affc4cc;
+    border-radius: 8px;
+  }
+
+  /* Search section */
+  .search-section {
+    max-width: 900px;
+    margin: 15px auto;
+    padding: 15px 20px;
+    background: #1f2024;
+    border-radius: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.8);
+    align-items: center;
+  }
+  select, input[type="text"] {
+    background: #121214;
+    border: 1.8px solid #7affc4;
+    color: #7affc4;
+    font-size: 16px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    flex-grow: 1;
+    min-width: 160px;
+    font-family: 'Fira Mono', monospace;
+    transition: border-color 0.3s ease;
+  }
+  select:focus, input[type="text"]:focus {
+    outline: none;
+    border-color: #55e6b8;
+    box-shadow: 0 0 12px #55e6b888;
+    background-color: #18191d;
+  }
+  button {
+    background-color: #55e6b8;
+    border: none;
+    padding: 12px 25px;
+    color: #121214;
+    font-weight: 600;
+    font-size: 16px;
+    border-radius: 10px;
+    cursor: pointer;
+    flex-shrink: 0;
+    font-family: 'Fira Mono', monospace;
+    transition: background-color 0.3s ease;
+  }
+  button:hover {
+    background-color: #7affc4;
+  }
+
+  /* Results container */
+  #results {
+    max-width: 900px;
+    margin: 20px auto 40px;
+    background: #1f2024;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.8);
+    padding: 12px;
+    overflow-x: hidden;  /* Disable horizontal scroll */
+    overflow-y: visible;
+    max-height: none;
+    word-break: break-word; /* Allow breaking long words */
+  }
+
+  /* Table inside results */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    color: #7affc4;
+    font-family: 'Fira Mono', monospace;
+    font-size: 14px;
+    table-layout: fixed;  /* Fix column widths to fit container */
+  }
+  th, td {
+    padding: 8px 10px;
+    border-bottom: 1.5px solid #333;
+    text-align: left;
+    word-wrap: break-word; /* Wrap long text */
+  }
+  th {
+    border-bottom: 2px solid #55e6b8;
+  }
+  tr:hover {
+    background-color: #33373d;
+  }
+  a {
+    color: #7affc4;
+    text-decoration: underline;
+    cursor: pointer;
+    transition: color 0.3s ease;
+  }
+  a:hover {
+    color: #55e6b8;
+  }
+
+  /* Modal */
+  .modal {
+    position: fixed;
+    top: 12%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80%;
+    max-width: 600px;
+    background-color: #1f2024;
+    color: #7affc4;
+    border-radius: 14px;
+    box-shadow: 0 0 30px #55e6b8aa;
+    padding: 30px 35px;
+    font-family: 'Fira Mono', monospace;
+    font-size: 16px;
+    white-space: pre-wrap;
+    user-select: text;
+    display: none;
+    z-index: 1200;
+  }
+  .modal-close {
+    position: absolute;
+    top: 12px;
+    right: 20px;
+    font-size: 26px;
+    color: #ff7070;
+    font-weight: bold;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  /* Progress Bar Container */
+  #progress-container {
+    max-width: 900px;
+    margin: 10px auto 0 auto;
+    background: #121214;
+    border-radius: 8px;
+    overflow: hidden;
+    height: 8px;
+    box-shadow: inset 0 0 6px #7affc4aa;
+    display: none;
+  }
+  /* Progress Bar */
+  #progress-bar {
+    height: 8px;
+    background: #55e6b8;
+    width: 0%;
+    transition: width 0.3s ease;
+  }
+</style>
+</head>
+<body>
+  <div class="terminal" id="terminal">
+    <div id="terminal-content">[Terminal Booting... Please wait]</div>
+  </div>
+
+  <div class="search-section">
+    <select id="dataset" title="Select Dataset">
+      <option value="morning">Morning</option>
+      <option value="spat">SPAT</option>
+    </select>
+    <input type="text" id="search" placeholder="Enter Surname, Matric No, etc" title="Search input" />
+    <input type="text" id="adminKey" placeholder="Admin Key (if any)" title="Admin override key" />
+    <button onclick="performSearch()">Search</button>
+  </div>
+
+  <!-- Progress Bar -->
+  <div id="progress-container">
+    <div id="progress-bar"></div>
+  </div>
+
+  <div id="results"></div>
+
+  <div class="modal" id="studentModal">
+    <span class="modal-close" onclick="document.getElementById('studentModal').style.display='none'">×</span>
+    <pre id="modalContent"></pre>
+  </div>
+
+<script>
+  const urls = {
+    morning:
+      "https://raw.githubusercontent.com/mrkamar/student-records/refs/heads/main/morning.csv",
+    spat:
+      "https://raw.githubusercontent.com/mrkamar/student-records/refs/heads/main/spat.csv",
+    command:
+      "https://raw.githubusercontent.com/mrkamar/student-records/refs/heads/main/command.json",
+  };
+
+  const terminal = document.getElementById("terminal-content");
+  const progressContainer = document.getElementById("progress-container");
+  const progressBar = document.getElementById("progress-bar");
+
+  function logToTerminal(msg) {
+    terminal.innerHTML += "\n" + msg;
+    terminal.parentElement.scrollTop = terminal.parentElement.scrollHeight;
+  }
+
+  async function fetchCommand() {
+    try {
+      const res = await fetch(urls.command, {cache: "no-store"});
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+      const json = await res.json();
+      logToTerminal("[INFO] Command loaded: status=" + json.status);
+      return json;
+    } catch (e) {
+      logToTerminal("[WARN] Failed to load command.json: " + e.message);
+      // Default allow usage if fail to fetch
+      return { status: "on", adminKey: "" };
+    }
+  }
+
+  async function performSearch() {
+    const keyEntered = document.getElementById("adminKey").value.trim();
+    const searchVal = document.getElementById("search").value.toLowerCase().trim();
+    const selected = document.getElementById("dataset").value;
+    const csvUrl = urls[selected];
+
+    if (!searchVal) {
+      alert("Please enter search text");
+      return;
+    }
+
+    logToTerminal("[INFO] Checking command status...");
+
+    const cmd = await fetchCommand();
+
+    logToTerminal(`[DEBUG] Command status: "${cmd.status}", Admin key in command: "${cmd.adminKey}", Key entered: "${keyEntered}"`);
+
+    if (cmd.status === "off") {
+      if (keyEntered !== cmd.adminKey) {
+        const shutdownMsg = cmd.message || "Tool is currently disabled by admin control.";
+        terminal.innerHTML += `\n[SYSTEM] 🚫 ${shutdownMsg}\nPlease enter a valid override key to continue.`;
+        alert(shutdownMsg + "\nPlease enter a valid override key to continue.");
+        document.getElementById("results").innerHTML = "";
+        logToTerminal("[INFO] Search aborted due to disabled status and invalid override key.");
+        return;
+      } else {
+        logToTerminal("[INFO] Valid override key entered, continuing despite disabled status.");
+      }
+    }
+
+    logToTerminal("[INFO] Fetching data for: " + selected.toUpperCase());
+
+    // Show progress bar and reset it
+    progressContainer.style.display = "block";
+    progressBar.style.width = "0%";
+
+    try {
+      // Use fetch with ReadableStream to update progress bar
+      const response = await fetch(csvUrl, {cache: "no-store"});
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+      const reader = response.body.getReader();
+      const contentLength = +response.headers.get('Content-Length');
+      let receivedLength = 0; // received bytes
+      let chunks = []; // array of received binary chunks (Uint8Array)
+      while(true) {
+        const {done, value} = await reader.read();
+        if (done) break;
+        chunks.push(value);
+        receivedLength += value.length;
+        if (contentLength) {
+          let progress = (receivedLength / contentLength) * 100;
+          progressBar.style.width = progress + "%";
+        }
+      }
+      // Concatenate chunks into one Uint8Array
+      let chunksAll = new Uint8Array(receivedLength);
+      let position = 0;
+      for(let chunk of chunks) {
+        chunksAll.set(chunk, position);
+        position += chunk.length;
+      }
+      // Decode to string
+      const csv = new TextDecoder("utf-8").decode(chunksAll);
+
+      // Hide progress bar after load
+      progressBar.style.width = "100%";
+      setTimeout(() => {
+        progressContainer.style.display = "none";
+        progressBar.style.width = "0%";
+      }, 500);
+
+      const lines = csv.trim().split("\n");
+      const headers = lines[0].replace(/"/g, "").split(",");
+
+      const records = lines.slice(1).map((line) => {
+        const cells = line
+          .match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g)
+          .map((cell) => cell.replace(/"/g, ""));
+        let obj = {};
+        headers.forEach((h, i) => (obj[h.trim()] = cells[i]?.trim()));
+        return obj;
+      });
+
+      const matched = records.filter((row) =>
+        Object.values(row).some(
+          (val) => val && val.toLowerCase().includes(searchVal)
+        )
+      );
+
+      logToTerminal(`[INFO] Found ${matched.length} result(s)`);
+
+      if (matched.length === 0) {
+        document.getElementById("results").innerHTML = "<p>No match found.</p>";
+        return;
+      }
+
+      let html =
+        "<table><tr><th>Matric No</th><th>Surname</th><th>Othernames</th></tr>";
+      matched.forEach((row) => {
+        html += `<tr><td><a href='#' onclick='showDetails(${JSON.stringify(
+          row
+        )}); return false;'>${row["Matric No"]}</a></td><td>${row["Surname"]}</td><td>${
+          row["Othernames"]
+        }</td></tr>`;
+      });
+      html += "</table>";
+
+      document.getElementById("results").innerHTML = html;
+    } catch (err) {
+      logToTerminal("[ERROR] Failed to fetch data: " + err.message);
+      alert("Failed to load student data. See terminal for details.");
+      progressContainer.style.display = "none";
+      progressBar.style.width = "0%";
+    }
+  }
+
+  function showDetails(record) {
+    const content = Object.entries(record)
+      .map(([k, v]) => `${k}: ${v || "-"}`)
+      .join("\n");
+    document.getElementById("modalContent").innerText = content;
+    document.getElementById("studentModal").style.display = "block";
+
+    logToTerminal(`[MODAL] Viewing details of ${record["Matric No"]}`);
+  }
+
+  // Initial disclaimer
+  const disclaimer = `
+[BOOT] Initializing screen...
+[NOTICE] This tool is for educational purposes only.
+[NOTICE] Do not use it to commit fraud or cybercrime.
+[TERMS] Usage implies acceptance of the terms.
+`;
+  logToTerminal(disclaimer.trim());
+</script>
+</body>
+  </html>
+  
