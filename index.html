@@ -264,8 +264,8 @@
 
     const cmd = await fetchCommand();
 
-    logToTerminal(`[DEBUG] Command status: "${cmd.status}", Admin key in command: "${cmd.adminKey}", Key entered: "${keyEntered}"`);
-
+    logToTerminal(`[DEBUG] Command status: "${cmd.status}"`);
+    
     if (cmd.status === "off") {
       if (keyEntered !== cmd.adminKey) {
         const shutdownMsg = cmd.message || "Tool is currently disabled by admin control.";
