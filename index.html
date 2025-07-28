@@ -31,18 +31,16 @@
     user-select: text;
     white-space: pre-wrap;
   }
-
-  /* Scrollbar for terminal */
-  .terminal::-webkit-scrollbar {
-    width: 8px;
+  .terminal[aria-live] {
+    outline: none;
   }
+
+  .terminal::-webkit-scrollbar { width: 8px; }
   .terminal::-webkit-scrollbar-track {
-    background: #121214;
-    border-radius: 8px;
+    background: #121214; border-radius: 8px;
   }
   .terminal::-webkit-scrollbar-thumb {
-    background: #7affc4cc;
-    border-radius: 8px;
+    background: #7affc4cc; border-radius: 8px;
   }
 
   /* Search section */
@@ -89,9 +87,7 @@
     font-family: 'Fira Mono', monospace;
     transition: background-color 0.3s ease;
   }
-  button:hover {
-    background-color: #7affc4;
-  }
+  button:hover { background-color: #7affc4; }
 
   /* Results container */
   #results {
@@ -101,42 +97,35 @@
     border-radius: 12px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.8);
     padding: 12px;
-    overflow-x: hidden;  /* Disable horizontal scroll */
+    overflow-x: hidden;
     overflow-y: visible;
     max-height: none;
-    word-break: break-word; /* Allow breaking long words */
+    word-break: break-word;
   }
 
-  /* Table inside results */
   table {
     width: 100%;
     border-collapse: collapse;
     color: #7affc4;
     font-family: 'Fira Mono', monospace;
     font-size: 14px;
-    table-layout: fixed;  /* Fix column widths to fit container */
+    table-layout: fixed;
   }
   th, td {
     padding: 8px 10px;
     border-bottom: 1.5px solid #333;
     text-align: left;
-    word-wrap: break-word; /* Wrap long text */
+    word-wrap: break-word;
   }
-  th {
-    border-bottom: 2px solid #55e6b8;
-  }
-  tr:hover {
-    background-color: #33373d;
-  }
+  th { border-bottom: 2px solid #55e6b8; }
+  tr:hover { background-color: #33373d; }
   a {
     color: #7affc4;
     text-decoration: underline;
     cursor: pointer;
     transition: color 0.3s ease;
   }
-  a:hover {
-    color: #55e6b8;
-  }
+  a:hover { color: #55e6b8; }
 
   /* Modal */
   .modal {
@@ -157,6 +146,10 @@
     user-select: text;
     display: none;
     z-index: 1200;
+
+    /* scrollable vertically */
+    max-height: 80vh;
+    overflow-y: auto;
   }
   .modal-close {
     position: absolute;
@@ -167,9 +160,10 @@
     font-weight: bold;
     cursor: pointer;
     user-select: none;
+    background: transparent;
+    border: none;
   }
 
-  /* Progress Bar Container */
   #progress-container {
     max-width: 900px;
     margin: 10px auto 0 auto;
@@ -180,97 +174,146 @@
     box-shadow: inset 0 0 6px #7affc4aa;
     display: none;
   }
-  /* Progress Bar */
   #progress-bar {
     height: 8px;
     background: #55e6b8;
     width: 0%;
     transition: width 0.3s ease;
   }
+
+  /* Toast */
+  #toast {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background: #ff4e4e;
+    color: #fff;
+    padding: 14px 20px;
+    border-radius: 8px;
+    font-family: 'Fira Mono', monospace;
+    display: none;
+    z-index: 2000;
+    box-shadow: 0 0 20px #ff4e4ecc;
+    transition: opacity 0.4s ease;
+    max-width: 90vw;
+  }
+  #toast.success { background: #2ea043; }
+  #toast.warn { background: #e2b93b; color: #121214; }
 </style>
 </head>
 <body>
-  <div class="terminal" id="terminal">
+  <div class="terminal" id="terminal" tabindex="-1" aria-live="polite" aria-atomic="false">
     <div id="terminal-content">[Terminal Booting... Please wait]</div>
   </div>
 
-  <div class="search-section">
-    <select id="dataset" title="Select Dataset">
-      <option value="morning">Morning(Regular)</option>
-      <option value="spat">SPAT(Evening)</option>
+  <div class="search-section" role="search">
+    <select id="dataset" title="Select Dataset" aria-label="Select dataset">
+      <option value="morning">Morning (Regular)</option>
+      <option value="spat">SPAT (Evening)</option>
     </select>
-    <input type="text" id="search" placeholder="Enter Name, Matric No, etc" title="Search input" />
-    <input type="text" id="adminKey" placeholder="Admin Key for override" title="Admin override key" />
-    <button onclick="performSearch()">Search</button>
+
+    <select id="searchMode" title="Search Mode" aria-label="Search mode">
+      <option value="default">Contains</option>
+      <option value="exact">Exact Match</option>
+      <option value="regex">Regex</option>
+      <option value="column">Column Filter</option>
+    </select>
+
+    <input type="text" id="search" placeholder="Enter Name, Matric No, etc" title="Search input" aria-label="Search field" />
+
+    <input type="text" id="adminKey" placeholder="Admin Key for override" title="Admin override key" aria-label="Admin override key" />
+
+    <button id="searchBtn" type="button" aria-label="Search">Search</button>
   </div>
 
-  <!-- Progress Bar -->
-  <div id="progress-container">
+  <div id="progress-container" aria-hidden="true">
     <div id="progress-bar"></div>
   </div>
 
-  <div id="results"></div>
+  <div id="results" aria-live="polite"></div>
 
-  <div class="modal" id="studentModal">
-    <span class="modal-close" onclick="document.getElementById('studentModal').style.display='none'">×</span>
-    <pre id="modalContent"></pre>
+  <div class="modal" id="studentModal" role="dialog" aria-modal="true" aria-labelledby="studentModalTitle" aria-hidden="true">
+    <button id="closeModalBtn" class="modal-close" aria-label="Close details">×</button>
+    <h2 id="studentModalTitle" style="margin-top:0;margin-bottom:10px;">Student Details</h2>
+    <!-- Center-aligned photo -->
+    <img id="studentPhoto" src="" alt="Student Photo"
+         style="width:120px;border-radius:8px;margin:0 auto 15px auto;display:none;" />
+    <pre id="modalContent" tabindex="0"></pre>
   </div>
+
+  <div id="toast" role="status" aria-live="polite"></div>
 
 <script>
   const urls = {
-    morning:
-      "https://raw.githubusercontent.com/mrkamar/student-records/refs/heads/main/morning.csv",
-    spat:
-      "https://raw.githubusercontent.com/mrkamar/student-records/refs/heads/main/spat.csv",
-    command:
-      "https://raw.githubusercontent.com/mrkamar/student-records/refs/heads/main/command.json",
+    morning: "https://raw.githubusercontent.com/mrkamar/student-records/refs/heads/main/morning.csv",
+    spat: "https://raw.githubusercontent.com/mrkamar/student-records/refs/heads/main/spat.csv",
+    command: "https://raw.githubusercontent.com/mrkamar/student-records/refs/heads/main/command.json",
   };
 
   const terminal = document.getElementById("terminal-content");
   const progressContainer = document.getElementById("progress-container");
   const progressBar = document.getElementById("progress-bar");
+  const searchBtn = document.getElementById("searchBtn");
+  const searchInput = document.getElementById("search");
+  const searchModeEl = document.getElementById("searchMode");
 
+  /* ------------ Utilities ------------ */
   function logToTerminal(msg) {
-    terminal.innerHTML += "\n" + msg;
+    terminal.textContent += "\n" + msg;
     terminal.parentElement.scrollTop = terminal.parentElement.scrollHeight;
+  }
+
+  function showToast(message, type = "error", duration = 3000) {
+    const toast = document.getElementById('toast');
+    toast.textContent = message;
+    toast.className = ""; // reset
+    if (type === "success") toast.classList.add("success");
+    if (type === "warn") toast.classList.add("warn");
+    toast.style.display = 'block';
+    toast.style.opacity = '1';
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      setTimeout(() => toast.style.display = 'none', 400);
+    }, duration);
   }
 
   async function fetchCommand() {
     try {
-      const res = await fetch(urls.command, {cache: "no-store"});
+      const res = await fetch(urls.command, { cache: "no-store" });
       if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
       const json = await res.json();
       logToTerminal("[INFO] Command loaded: status=" + json.status);
       return json;
     } catch (e) {
-      logToTerminal("[WARN] Failed to load command.json: " + e.message);
-      // Default allow usage if fail to fetch
+      logToTerminal("[WARN] Failed to load command.json: " + (e.stack || e.message));
       return { status: "on", adminKey: "" };
     }
   }
 
+  /* ------------ Search ------------ */
   async function performSearch() {
     const keyEntered = document.getElementById("adminKey").value.trim();
-    const searchVal = document.getElementById("search").value.toLowerCase().trim();
+    const rawSearchVal = searchInput.value.trim();
     const selected = document.getElementById("dataset").value;
+    const mode = searchModeEl.value;
     const csvUrl = urls[selected];
 
-    if (!searchVal) {
-      alert("Please enter search text");
+    if (!rawSearchVal) {
+      showToast("Please enter search text.", "warn");
+      searchInput.focus();
       return;
     }
 
     logToTerminal("[INFO] Checking command status...");
-
     const cmd = await fetchCommand();
-
     logToTerminal(`[DEBUG] Command status: "${cmd.status}"`);
-    
+
     if (cmd.status === "off") {
       if (keyEntered !== cmd.adminKey) {
         const shutdownMsg = cmd.message || "Tool is currently disabled by admin control.";
-        terminal.innerHTML += `\n[SYSTEM] 🚫 ${shutdownMsg}\nPlease enter a valid override key to continue.`;
-        alert(shutdownMsg + "\nPlease enter a valid override key to continue.");
+        const msg = `[SYSTEM] 🚫 ${shutdownMsg}\nPlease enter a valid override key to continue.`;
+        terminal.textContent += `\n${msg}`;
+        showToast(shutdownMsg + " Enter a valid override key to continue.", "warn", 4000);
         document.getElementById("results").innerHTML = "";
         logToTerminal("[INFO] Search aborted due to disabled status and invalid override key.");
         return;
@@ -280,22 +323,20 @@
     }
 
     logToTerminal("[INFO] Fetching data for: " + selected.toUpperCase());
-
-    // Show progress bar and reset it
     progressContainer.style.display = "block";
     progressBar.style.width = "0%";
 
     try {
-      // Use fetch with ReadableStream to update progress bar
-      const response = await fetch(csvUrl, {cache: "no-store"});
+      const response = await fetch(csvUrl, { cache: "no-store" });
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
       const reader = response.body.getReader();
       const contentLength = +response.headers.get('Content-Length');
-      let receivedLength = 0; // received bytes
-      let chunks = []; // array of received binary chunks (Uint8Array)
-      while(true) {
-        const {done, value} = await reader.read();
+      let receivedLength = 0;
+      let chunks = [];
+
+      while (true) {
+        const { done, value } = await reader.read();
         if (done) break;
         chunks.push(value);
         receivedLength += value.length;
@@ -304,17 +345,16 @@
           progressBar.style.width = progress + "%";
         }
       }
-      // Concatenate chunks into one Uint8Array
+
       let chunksAll = new Uint8Array(receivedLength);
       let position = 0;
-      for(let chunk of chunks) {
+      for (let chunk of chunks) {
         chunksAll.set(chunk, position);
         position += chunk.length;
       }
-      // Decode to string
+
       const csv = new TextDecoder("utf-8").decode(chunksAll);
 
-      // Hide progress bar after load
       progressBar.style.width = "100%";
       setTimeout(() => {
         progressContainer.style.display = "none";
@@ -325,19 +365,54 @@
       const headers = lines[0].replace(/"/g, "").split(",");
 
       const records = lines.slice(1).map((line) => {
-        const cells = line
-          .match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g)
-          .map((cell) => cell.replace(/"/g, ""));
+        const cells = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g)
+                          ?.map((cell) => cell.replace(/"/g, "")) || [];
         let obj = {};
-        headers.forEach((h, i) => (obj[h.trim()] = cells[i]?.trim()));
+        headers.forEach((h, i) => (obj[h.trim()] = (cells[i] ?? "").trim()));
         return obj;
       });
 
-      const matched = records.filter((row) =>
-        Object.values(row).some(
-          (val) => val && val.toLowerCase().includes(searchVal)
-        )
-      );
+      // --- Search logic ---
+      const searchValLower = rawSearchVal.toLowerCase();
+      const isQuoted = /^"(.*)"$/.test(rawSearchVal); // "exact phrase"
+      let matched = [];
+
+      if (mode === "regex") {
+        try {
+          const pattern = new RegExp(rawSearchVal, "i");
+          matched = records.filter(row =>
+            Object.values(row).some(val => val && pattern.test(val))
+          );
+        } catch (e) {
+          logToTerminal("[ERROR] Invalid regex pattern: " + (e.stack || e.message));
+          showToast("Invalid regex pattern.", "warn");
+          return;
+        }
+      } else if (mode === "exact" || isQuoted) {
+        const needle = isQuoted ? rawSearchVal.slice(1, -1).toLowerCase() : searchValLower;
+        matched = records.filter(row =>
+          Object.values(row).some(val => val && val.toLowerCase() === needle)
+        );
+      } else if (mode === "column") {
+        const parts = rawSearchVal.split(":");
+        if (parts.length === 2) {
+          const col = parts[0].trim().toLowerCase();
+          const val = parts[1].trim().toLowerCase();
+          matched = records.filter(row =>
+            Object.entries(row).some(
+              ([k, v]) => k.toLowerCase() === col && (v || "").toLowerCase().includes(val)
+            )
+          );
+        } else {
+          logToTerminal("[WARN] Column filter format invalid. Use column:value");
+          showToast("Column filter must be in format: column:value", "warn");
+          return;
+        }
+      } else {
+        matched = records.filter(row =>
+          Object.values(row).some(val => val && val.toLowerCase().includes(searchValLower))
+        );
+      }
 
       logToTerminal(`[INFO] Found ${matched.length} result(s)`);
 
@@ -349,34 +424,127 @@
       let html =
         "<table><tr><th>Matric No</th><th>Surname</th><th>Othernames</th></tr>";
       matched.forEach((row) => {
-        html += `<tr><td><a href='#' onclick='showDetails(${JSON.stringify(
-          row
-        )}); return false;'>${row["Matric No"]}</a></td><td>${row["Surname"]}</td><td>${
-          row["Othernames"]
-        }</td></tr>`;
+        const linkData = encodeURIComponent(JSON.stringify(row));
+        html += `<tr>
+          <td><a href="#" data-record="${linkData}" class="detail-link">${row["Matric No"]}</a></td>
+          <td>${row["Surname"] || "-"}</td>
+          <td>${row["Othernames"] || "-"}</td>
+        </tr>`;
       });
       html += "</table>";
 
-      document.getElementById("results").innerHTML = html;
+      const resultsEl = document.getElementById("results");
+      resultsEl.innerHTML = html;
+
+      // Delegate clicks for details
+      resultsEl.querySelectorAll(".detail-link").forEach(a => {
+        a.addEventListener("click", (ev) => {
+          ev.preventDefault();
+          const record = JSON.parse(decodeURIComponent(a.getAttribute("data-record")));
+          showDetails(record, a); // pass the trigger for focus return
+        });
+      });
+
     } catch (err) {
-      logToTerminal("[ERROR] Failed to fetch data: " + err.message);
-      alert("Failed to load student data. See terminal for details.");
+      logToTerminal("[ERROR] Failed to fetch/process data: " + (err.stack || err.message));
+      showToast("Error: Failed to load student data.", "error", 4000);
       progressContainer.style.display = "none";
       progressBar.style.width = "0%";
     }
   }
 
-  function showDetails(record) {
+  /* ------------ Modal (accessibility, focus trap) ------------ */
+  const modal = document.getElementById("studentModal");
+  const closeModalBtn = document.getElementById("closeModalBtn");
+  const modalContent = document.getElementById("modalContent");
+  const studentPhoto = document.getElementById("studentPhoto");
+  let lastFocusedBeforeModal = null;
+
+  function focusableElementsIn(el) {
+    return el.querySelectorAll('a[href], button, input, textarea, select, [tabindex]:not([tabindex="-1"])');
+  }
+
+  function openModal() {
+    modal.style.display = "block";
+    modal.setAttribute("aria-hidden", "false");
+    const focusables = focusableElementsIn(modal);
+    (focusables[0] || modal).focus();
+    document.body.style.overflow = "hidden";
+  }
+
+  function closeModal() {
+    modal.style.display = "none";
+    modal.setAttribute("aria-hidden", "true");
+    document.body.style.overflow = "";
+    if (lastFocusedBeforeModal) lastFocusedBeforeModal.focus();
+  }
+
+  closeModalBtn.addEventListener("click", closeModal);
+  document.addEventListener('keydown', (e) => {
+    if (modal.style.display === 'block') {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        closeModal();
+        return;
+      }
+      if (e.key === 'Tab') {
+        const focusables = Array.from(focusableElementsIn(modal)).filter(el => el.offsetParent !== null);
+        if (!focusables.length) return;
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault(); last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault(); first.focus();
+        }
+      }
+    }
+  });
+
+  function showDetails(record, triggerEl = null) {
+    lastFocusedBeforeModal = triggerEl || document.activeElement;
+
     const content = Object.entries(record)
       .map(([k, v]) => `${k}: ${v || "-"}`)
       .join("\n");
-    document.getElementById("modalContent").innerText = content;
-    document.getElementById("studentModal").style.display = "block";
+    modalContent.innerText = content;
 
-    logToTerminal(`[MODAL] Viewing details of ${record["Matric No"]}`);
+    const rawMatric = record["Matric No"] || "";
+    const cleanMatric = rawMatric.replace(/\//g, "");
+
+    const selectedDataset = document.getElementById("dataset").value;
+
+    let photoBase = "";
+    if (selectedDataset === "morning") {
+      photoBase = "https://www.auchipoly-online.com/adm/photoreg/";
+    } else if (selectedDataset === "spat") {
+      photoBase = "https://www.auchipolyspats.com/adm/photoreg/";
+    }
+
+    const timestamp = Date.now();
+    const photoUrl = `${photoBase}${cleanMatric}.jpg?t=${timestamp}`;
+
+    studentPhoto.src = photoUrl;
+    studentPhoto.alt = `Student Photo for ${rawMatric}`;
+    studentPhoto.style.display = "block";
+
+    studentPhoto.onerror = () => {
+      studentPhoto.onerror = null; // prevent loop
+      studentPhoto.src = "https://via.placeholder.com/120x160.png?text=No+Photo";
+      logToTerminal(`[WARN] No photo found for ${rawMatric}. Using fallback.`);
+    };
+
+    logToTerminal(`[MODAL] Viewing details and photo of ${rawMatric}`);
+    openModal();
   }
 
-  // Initial disclaimer
+  /* ------------ Wire up search button & enter key ------------ */
+  searchBtn.addEventListener("click", performSearch);
+  searchInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") performSearch();
+  });
+
+  /* ------------ Disclaimer / Boot ------------ */
   const disclaimer = `
 [BOOT] Initializing screen...
 [NOTICE] This tool is for educational purposes only.
@@ -386,5 +554,4 @@
   logToTerminal(disclaimer.trim());
 </script>
 </body>
-  </html>
-  
+</html>
