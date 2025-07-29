@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <title>Login - Student Records</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <style>
     body {
       background: #121214;
@@ -62,6 +63,20 @@
     button:hover {
       background-color: #7affc4;
     }
+    #sampleBtn {
+      background: #333;
+      color: #7affc4;
+      font-size: 13px;
+      padding: 8px;
+      border: 1px solid #7affc4;
+      margin-top: 10px;
+      width: 100%;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    #sampleBtn:hover {
+      background-color: #444;
+    }
     #toast {
       position: fixed;
       bottom: 30px;
@@ -74,6 +89,8 @@
       display: none;
       z-index: 1000;
       box-shadow: 0 0 20px #ff4e4ecc;
+      white-space: pre-wrap;
+      max-width: 90vw;
     }
     #toast.success { background: #2ea043; }
   </style>
@@ -89,6 +106,11 @@
     <input type="text" id="surname" placeholder="Enter Surname" required />
 
     <button type="submit">Login</button>
+
+    <!-- Debugging Button -->
+    <button type="button" id="sampleBtn" onclick="viewSampleMatricNumbers()">
+      View 5 Sample Matric Nos
+    </button>
   </form>
 
   <div id="toast"></div>
@@ -110,20 +132,18 @@
       setTimeout(() => {
         toast.style.opacity = 0;
         setTimeout(() => (toast.style.display = "none"), 400);
-      }, 3000);
+      }, 3500);
     }
 
-    async function fetchCSV(url) {
-      const response = await fetch(url, { cache: "no-store" });
-      if (!response.ok) throw new Error("Failed to fetch");
-      const text = await response.text();
-      const lines = text.trim().split("\n");
-      const headers = lines[0].replace(/"/g, "").split(",");
-      return lines.slice(1).map(line => {
-        const values = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g)?.map(v => v.replace(/"/g, "")) || [];
-        let obj = {};
-        headers.forEach((h, i) => (obj[h.trim()] = (values[i] ?? "").trim()));
-        return obj;
+    function parseCSVFromURL(url) {
+      return new Promise((resolve, reject) => {
+        Papa.parse(url, {
+          download: true,
+          header: true,
+          skipEmptyLines: true,
+          complete: (results) => resolve(results.data),
+          error: (err) => reject(err)
+        });
       });
     }
 
@@ -140,28 +160,47 @@
 
       try {
         const [morning, spat] = await Promise.all([
-          fetchCSV(urls.morning),
-          fetchCSV(urls.spat),
+          parseCSVFromURL(urls.morning),
+          parseCSVFromURL(urls.spat)
         ]);
 
-        const all = [...morning, ...spat];
-        const match = all.find(
-          student =>
-            (student["Matric No"] || "").toLowerCase() === matric &&
-            (student["Surname"] || "").toLowerCase() === surname
+        const allRecords = [...morning, ...spat];
+        const matched = allRecords.find(student =>
+          (student["Matric No"] || "").toLowerCase() === matric &&
+          (student["Surname"] || "").toLowerCase() === surname
         );
 
-        if (match) {
-          localStorage.setItem("student_matric", match["Matric No"]);
-          localStorage.setItem("student_surname", match["Surname"]);
+        if (matched) {
+          localStorage.setItem("student_matric", matched["Matric No"]);
+          localStorage.setItem("student_surname", matched["Surname"]);
           showToast("Login successful!", "success");
-          setTimeout(() => (window.location.href = "dashboard.html"), 1000); // Redirect to dashboard
+          setTimeout(() => window.location.href = "index.html", 1000);
         } else {
           showToast("No matching student found.");
         }
       } catch (err) {
         console.error(err);
-        showToast("An error occurred while checking records.");
+        showToast("Failed to load records.");
+      }
+    }
+
+    async function viewSampleMatricNumbers() {
+      try {
+        const [morning, spat] = await Promise.all([
+          parseCSVFromURL(urls.morning),
+          parseCSVFromURL(urls.spat)
+        ]);
+
+        const all = [...morning, ...spat];
+        const uniqueMatricNumbers = [...new Set(
+          all.map(row => row["Matric No"]).filter(Boolean)
+        )];
+
+        const sample = uniqueMatricNumbers.slice(0, 5);
+        showToast("Sample Matric Nos:\n" + sample.join("\n"), "success");
+      } catch (err) {
+        console.error(err);
+        showToast("Error fetching sample matric numbers.");
       }
     }
 
