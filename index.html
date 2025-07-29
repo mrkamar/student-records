@@ -1,103 +1,581 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Verify Matric Number</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
-  <style>
-    body {
-      background-color: #121214;
-      color: #e0e0e0;
-      font-family: 'Fira Mono', monospace;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-    }
-    .message {
-      background-color: #1f2024;
-      padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 0 12px rgba(0, 0, 0, 0.5);
-      text-align: center;
-      max-width: 500px;
-    }
-    .spinner-border {
-      width: 2rem;
-      height: 2rem;
-    }
-  </style>
+<meta charset="UTF-8" />
+<title>Student Records Search</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  /* Base */
+  body {
+    margin: 0;
+    background-color: #121214;
+    color: #e0e0e0;
+    font-family: 'Fira Mono', Consolas, 'Courier New', monospace;
+  }
+
+  /* Terminal container */
+  .terminal {
+    background: linear-gradient(145deg, #1f2024, #18191d);
+    border-radius: 12px;
+    max-width: 900px;
+    margin: 20px auto;
+    padding: 20px 25px;
+    box-shadow:
+      inset 0 0 15px rgba(255, 255, 255, 0.07),
+      0 4px 15px rgba(0, 0, 0, 0.7);
+    color: #7affc4;
+    font-size: 15px;
+    line-height: 1.4;
+    height: 220px;
+    overflow-y: auto;
+    user-select: text;
+    white-space: pre-wrap;
+  }
+  .terminal[aria-live] {
+    outline: none;
+  }
+
+  .terminal::-webkit-scrollbar { width: 8px; }
+  .terminal::-webkit-scrollbar-track {
+    background: #121214; border-radius: 8px;
+  }
+  .terminal::-webkit-scrollbar-thumb {
+    background: #7affc4cc; border-radius: 8px;
+  }
+
+  /* Search section */
+  .search-section {
+    max-width: 900px;
+    margin: 15px auto;
+    padding: 15px 20px;
+    background: #1f2024;
+    border-radius: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.8);
+    align-items: center;
+  }
+  select, input[type="text"] {
+    background: #121214;
+    border: 1.8px solid #7affc4;
+    color: #7affc4;
+    font-size: 16px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    flex-grow: 1;
+    min-width: 160px;
+    font-family: 'Fira Mono', monospace;
+    transition: border-color 0.3s ease;
+  }
+  select:focus, input[type="text"]:focus {
+    outline: none;
+    border-color: #55e6b8;
+    box-shadow: 0 0 12px #55e6b888;
+    background-color: #18191d;
+  }
+  button {
+    background-color: #55e6b8;
+    border: none;
+    padding: 12px 25px;
+    color: #121214;
+    font-weight: 600;
+    font-size: 16px;
+    border-radius: 10px;
+    cursor: pointer;
+    flex-shrink: 0;
+    font-family: 'Fira Mono', monospace;
+    transition: background-color 0.3s ease;
+  }
+  button:hover { background-color: #7affc4; }
+
+  /* Results container */
+  #results {
+    max-width: 900px;
+    margin: 20px auto 40px;
+    background: #1f2024;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.8);
+    padding: 12px;
+    overflow-x: hidden;
+    overflow-y: visible;
+    max-height: none;
+    word-break: break-word;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    color: #7affc4;
+    font-family: 'Fira Mono', monospace;
+    font-size: 14px;
+    table-layout: fixed;
+  }
+  th, td {
+    padding: 8px 10px;
+    border-bottom: 1.5px solid #333;
+    text-align: left;
+    word-wrap: break-word;
+  }
+  th { border-bottom: 2px solid #55e6b8; }
+  tr:hover { background-color: #33373d; }
+  a {
+    color: #7affc4;
+    text-decoration: underline;
+    cursor: pointer;
+    transition: color 0.3s ease;
+  }
+  a:hover { color: #55e6b8; }
+
+  /* Modal */
+  .modal {
+    position: fixed;
+    top: 12%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80%;
+    max-width: 600px;
+    background-color: #1f2024;
+    color: #7affc4;
+    border-radius: 14px;
+    box-shadow: 0 0 30px #55e6b8aa;
+    padding: 30px 35px;
+    font-family: 'Fira Mono', monospace;
+    font-size: 16px;
+    white-space: pre-wrap;
+    user-select: text;
+    display: none;
+    z-index: 1200;
+
+    /* scrollable vertically */
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+  .modal-close {
+    position: absolute;
+    top: 12px;
+    right: 20px;
+    font-size: 26px;
+    color: #ff7070;
+    font-weight: bold;
+    cursor: pointer;
+    user-select: none;
+    background: transparent;
+    border: none;
+  }
+
+  #progress-container {
+    max-width: 900px;
+    margin: 10px auto 0 auto;
+    background: #121214;
+    border-radius: 8px;
+    overflow: hidden;
+    height: 8px;
+    box-shadow: inset 0 0 6px #7affc4aa;
+    display: none;
+  }
+  #progress-bar {
+    height: 8px;
+    background: #55e6b8;
+    width: 0%;
+    transition: width 0.3s ease;
+  }
+
+  /* Toast */
+  #toast {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background: #ff4e4e;
+    color: #fff;
+    padding: 14px 20px;
+    border-radius: 8px;
+    font-family: 'Fira Mono', monospace;
+    display: none;
+    z-index: 2000;
+    box-shadow: 0 0 20px #ff4e4ecc;
+    transition: opacity 0.4s ease;
+    max-width: 90vw;
+  }
+  #toast.success { background: #2ea043; }
+  #toast.warn { background: #e2b93b; color: #121214; }
+</style>
 </head>
 <body>
-  <div class="message">
-    <div id="statusText">Verifying matric number...</div>
-    <div class="spinner-border text-info mt-3" role="status"></div>
+  <div class="top-bar">
+    <h4>Welcome, <span id="studentName">Student</span></h4>
+
+<div class="container text-center mt-4">
+  <div class="d-flex flex-wrap justify-content-center gap-2">
+    
+    <a href="about.html" class="btn btn-secondary">About</a>
+    <a href="result.html" class="btn btn-primary">Result Portal</a>
+  </div>
+</div>
+
+
+  </div>
+  <div class="terminal" id="terminal" tabindex="-1" aria-live="polite" aria-atomic="false">
+    <div id="terminal-content">[Terminal Booting... Please wait]</div>
   </div>
 
-  <script>
-    const urls = {
-      morning: "https://raw.githubusercontent.com/mrkamar/student-records/main/morning.csv",
-      spat: "https://raw.githubusercontent.com/mrkamar/student-records/main/spat.csv"
-    };
+  <div class="search-section" role="search">
+    <select id="dataset" title="Select Dataset" aria-label="Select dataset">
+      <option value="morning">Morning (Regular)</option>
+      <option value="spat">SPAT (Evening)</option>
+    </select>
 
-    async function fetchCSV(url) {
-      const response = await fetch(url);
-      return await response.text();
+    <select id="searchMode" title="Search Mode" aria-label="Search mode">
+      <option value="default">Contains</option>
+      <option value="exact">Exact Match</option>
+      <option value="regex">Regex</option>
+      <option value="column">Column Filter</option>
+    </select>
+
+    <input type="text" id="search" placeholder="Enter Name, Matric No, etc" title="Search input" aria-label="Search field" />
+
+    <input type="text" id="adminKey" placeholder="Admin Key for override" title="Admin override key" aria-label="Admin override key" />
+
+    <button id="searchBtn" type="button" aria-label="Search">Search</button>
+  </div>
+
+  <div id="progress-container" aria-hidden="true">
+    <div id="progress-bar"></div>
+  </div>
+
+  <div id="results" aria-live="polite"></div>
+
+  <div class="modal" id="studentModal" role="dialog" aria-modal="true" aria-labelledby="studentModalTitle" aria-hidden="true">
+    <button id="closeModalBtn" class="modal-close" aria-label="Close details">×</button>
+    <h2 id="studentModalTitle" style="margin-top:0;margin-bottom:10px;">Student Details</h2>
+    <!-- Center-aligned photo -->
+    <img id="studentPhoto" src="" alt="Student Photo"
+         style="width:120px;border-radius:8px;margin:0 auto 15px auto;display:none;" />
+    <pre id="modalContent" tabindex="0"></pre>
+  </div>
+
+  <div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+  
+
+  const urls = {
+    morning: "https://raw.githubusercontent.com/mrkamar/student-records/refs/heads/main/morning.csv",
+    spat: "https://raw.githubusercontent.com/mrkamar/student-records/refs/heads/main/spat.csv",
+    command: "https://raw.githubusercontent.com/mrkamar/student-records/refs/heads/main/command.json",
+  };
+
+  const terminal = document.getElementById("terminal-content");
+  const progressContainer = document.getElementById("progress-container");
+  const progressBar = document.getElementById("progress-bar");
+  const searchBtn = document.getElementById("searchBtn");
+  const searchInput = document.getElementById("search");
+  const searchModeEl = document.getElementById("searchMode");
+
+  /* ------------ Utilities ------------ */
+  function logToTerminal(msg) {
+    terminal.textContent += "\n" + msg;
+    terminal.parentElement.scrollTop = terminal.parentElement.scrollHeight;
+  }
+
+  function showToast(message, type = "error", duration = 3000) {
+    const toast = document.getElementById('toast');
+    toast.textContent = message;
+    toast.className = ""; // reset
+    if (type === "success") toast.classList.add("success");
+    if (type === "warn") toast.classList.add("warn");
+    toast.style.display = 'block';
+    toast.style.opacity = '1';
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      setTimeout(() => toast.style.display = 'none', 400);
+    }, duration);
+  }
+
+  async function fetchCommand() {
+    try {
+      const res = await fetch(urls.command, { cache: "no-store" });
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+      const json = await res.json();
+      logToTerminal("[INFO] Command loaded: status=" + json.status);
+      return json;
+    } catch (e) {
+      logToTerminal("[WARN] Failed to load command.json: " + (e.stack || e.message));
+      return { status: "on", adminKey: "" };
+    }
+  }
+
+  /* ------------ Search ------------ */
+  async function performSearch() {
+    const keyEntered = document.getElementById("adminKey").value.trim();
+    const rawSearchVal = searchInput.value.trim();
+    const selected = document.getElementById("dataset").value;
+    const mode = searchModeEl.value;
+    const csvUrl = urls[selected];
+
+    if (!rawSearchVal) {
+      showToast("Please enter search text.", "warn");
+      searchInput.focus();
+      return;
     }
 
-    function parseCSV(data) {
-      const rows = data.trim().split("\n");
-      const headers = rows[0].replace(/"/g, "").split(",");
-      return rows.slice(1).map(line => {
-        const cells = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g)?.map(c => c.replace(/"/g, "")) || [];
-        const obj = {};
-        headers.forEach((h, i) => (obj[h.trim()] = (cells[i] || "").trim()));
+    logToTerminal("[INFO] Checking command status...");
+    const cmd = await fetchCommand();
+    logToTerminal(`[DEBUG] Command status: "${cmd.status}"`);
+
+    if (cmd.status === "off") {
+      if (keyEntered !== cmd.adminKey) {
+        const shutdownMsg = cmd.message || "Tool is currently disabled by admin control.";
+        const msg = `[SYSTEM] 🚫 ${shutdownMsg}\nPlease enter a valid override key to continue.`;
+        terminal.textContent += `\n${msg}`;
+        showToast(shutdownMsg + " Enter a valid override key to continue.", "warn", 4000);
+        document.getElementById("results").innerHTML = "";
+        logToTerminal("[INFO] Search aborted due to disabled status and invalid override key.");
+        return;
+      } else {
+        logToTerminal("[INFO] Valid override key entered, continuing despite disabled status.");
+      }
+    }
+
+    logToTerminal("[INFO] Fetching data for: " + selected.toUpperCase());
+    progressContainer.style.display = "block";
+    progressBar.style.width = "0%";
+
+    try {
+      const response = await fetch(csvUrl, { cache: "no-store" });
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+      const reader = response.body.getReader();
+      const contentLength = +response.headers.get('Content-Length');
+      let receivedLength = 0;
+      let chunks = [];
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        chunks.push(value);
+        receivedLength += value.length;
+        if (contentLength) {
+          let progress = (receivedLength / contentLength) * 100;
+          progressBar.style.width = progress + "%";
+        }
+      }
+
+      let chunksAll = new Uint8Array(receivedLength);
+      let position = 0;
+      for (let chunk of chunks) {
+        chunksAll.set(chunk, position);
+        position += chunk.length;
+      }
+
+      const csv = new TextDecoder("utf-8").decode(chunksAll);
+
+      progressBar.style.width = "100%";
+      setTimeout(() => {
+        progressContainer.style.display = "none";
+        progressBar.style.width = "0%";
+      }, 500);
+
+      const lines = csv.trim().split("\n");
+      const headers = lines[0].replace(/"/g, "").split(",");
+
+      const records = lines.slice(1).map((line) => {
+        const cells = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g)
+                          ?.map((cell) => cell.replace(/"/g, "")) || [];
+        let obj = {};
+        headers.forEach((h, i) => (obj[h.trim()] = (cells[i] ?? "").trim()));
         return obj;
       });
-    }
 
-    async function verifyMatric() {
-      const matric = prompt("Enter your Matric Number:");
-      if (!matric) {
-        alert("Matric number is required.");
-        document.getElementById("statusText").innerText = "Verification cancelled.";
+      // --- Search logic ---
+      const searchValLower = rawSearchVal.toLowerCase();
+      const isQuoted = /^"(.*)"$/.test(rawSearchVal); // "exact phrase"
+      let matched = [];
+
+      if (mode === "regex") {
+        try {
+          const pattern = new RegExp(rawSearchVal, "i");
+          matched = records.filter(row =>
+            Object.values(row).some(val => val && pattern.test(val))
+          );
+        } catch (e) {
+          logToTerminal("[ERROR] Invalid regex pattern: " + (e.stack || e.message));
+          showToast("Invalid regex pattern.", "warn");
+          return;
+        }
+      } else if (mode === "exact" || isQuoted) {
+        const needle = isQuoted ? rawSearchVal.slice(1, -1).toLowerCase() : searchValLower;
+        matched = records.filter(row =>
+          Object.values(row).some(val => val && val.toLowerCase() === needle)
+        );
+      } else if (mode === "column") {
+        const parts = rawSearchVal.split(":");
+        if (parts.length === 2) {
+          const col = parts[0].trim().toLowerCase();
+          const val = parts[1].trim().toLowerCase();
+          matched = records.filter(row =>
+            Object.entries(row).some(
+              ([k, v]) => k.toLowerCase() === col && (v || "").toLowerCase().includes(val)
+            )
+          );
+        } else {
+          logToTerminal("[WARN] Column filter format invalid. Use column:value");
+          showToast("Column filter must be in format: column:value", "warn");
+          return;
+        }
+      } else {
+        matched = records.filter(row =>
+          Object.values(row).some(val => val && val.toLowerCase().includes(searchValLower))
+        );
+      }
+
+      logToTerminal(`[INFO] Found ${matched.length} result(s)`);
+
+      if (matched.length === 0) {
+        document.getElementById("results").innerHTML = "<p>No match found.</p>";
         return;
       }
 
-      document.getElementById("statusText").innerText = "Checking Morning records...";
+      let html =
+        "<table><tr><th>Matric No</th><th>Surname</th><th>Othernames</th></tr>";
+      matched.forEach((row) => {
+        const linkData = encodeURIComponent(JSON.stringify(row));
+        html += `<tr>
+          <td><a href="#" data-record="${linkData}" class="detail-link">${row["Matric No"]}</a></td>
+          <td>${row["Surname"] || "-"}</td>
+          <td>${row["Othernames"] || "-"}</td>
+        </tr>`;
+      });
+      html += "</table>";
 
-      try {
-        let data = await fetchCSV(urls.morning);
-        let records = parseCSV(data);
-        let found = records.some(r => r["Matric No"]?.toLowerCase() === matric.toLowerCase());
+      const resultsEl = document.getElementById("results");
+      resultsEl.innerHTML = html;
 
-        if (found) {
-          window.location.href = "index.html";
-          return;
+      // Delegate clicks for details
+      resultsEl.querySelectorAll(".detail-link").forEach(a => {
+        a.addEventListener("click", (ev) => {
+          ev.preventDefault();
+          const record = JSON.parse(decodeURIComponent(a.getAttribute("data-record")));
+          showDetails(record, a); // pass the trigger for focus return
+        });
+      });
+
+    } catch (err) {
+      logToTerminal("[ERROR] Failed to fetch/process data: " + (err.stack || err.message));
+      showToast("Error: Failed to load student data.", "error", 4000);
+      progressContainer.style.display = "none";
+      progressBar.style.width = "0%";
+    }
+  }
+
+  /* ------------ Modal (accessibility, focus trap) ------------ */
+  const modal = document.getElementById("studentModal");
+  const closeModalBtn = document.getElementById("closeModalBtn");
+  const modalContent = document.getElementById("modalContent");
+  const studentPhoto = document.getElementById("studentPhoto");
+  let lastFocusedBeforeModal = null;
+
+  function focusableElementsIn(el) {
+    return el.querySelectorAll('a[href], button, input, textarea, select, [tabindex]:not([tabindex="-1"])');
+  }
+
+  function openModal() {
+    modal.style.display = "block";
+    modal.setAttribute("aria-hidden", "false");
+    const focusables = focusableElementsIn(modal);
+    (focusables[0] || modal).focus();
+    document.body.style.overflow = "hidden";
+  }
+
+  function closeModal() {
+    modal.style.display = "none";
+    modal.setAttribute("aria-hidden", "true");
+    document.body.style.overflow = "";
+    if (lastFocusedBeforeModal) lastFocusedBeforeModal.focus();
+  }
+
+  closeModalBtn.addEventListener("click", closeModal);
+  document.addEventListener('keydown', (e) => {
+    if (modal.style.display === 'block') {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        closeModal();
+        return;
+      }
+      if (e.key === 'Tab') {
+        const focusables = Array.from(focusableElementsIn(modal)).filter(el => el.offsetParent !== null);
+        if (!focusables.length) return;
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault(); last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault(); first.focus();
         }
-
-        document.getElementById("statusText").innerText = "Not found in Morning. Checking SPAT records...";
-
-        data = await fetchCSV(urls.spat);
-        records = parseCSV(data);
-        found = records.some(r => r["Matric No"]?.toLowerCase() === matric.toLowerCase());
-
-        if (found) {
-          window.location.href = "index.html";
-        } else {
-          alert("Matric number not found in any record.");
-          document.getElementById("statusText").innerText = "Matric number not found.";
-        }
-
-      } catch (error) {
-        alert("Error fetching data. Please try again later.");
-        console.error(error);
-        document.getElementById("statusText").innerText = "An error occurred.";
       }
     }
+  });
 
-    verifyMatric();
-  </script>
+  function showDetails(record, triggerEl = null) {
+    lastFocusedBeforeModal = triggerEl || document.activeElement;
+
+    const content = Object.entries(record)
+      .map(([k, v]) => `${k}: ${v || "-"}`)
+      .join("\n");
+    modalContent.innerText = content;
+
+    const rawMatric = record["Matric No"] || "";
+    const cleanMatric = rawMatric.replace(/\//g, "");
+
+    const selectedDataset = document.getElementById("dataset").value;
+
+    let photoBase = "";
+    if (selectedDataset === "morning") {
+      photoBase = "https://www.auchipoly-online.com/adm/photoreg/";
+    } else if (selectedDataset === "spat") {
+      photoBase = "https://www.auchipolyspats.com/adm/photoreg/";
+    }
+
+    const timestamp = Date.now();
+    const photoUrl = `${photoBase}${cleanMatric}.jpg?t=${timestamp}`;
+
+    studentPhoto.src = photoUrl;
+    studentPhoto.alt = `Student Photo for ${rawMatric}`;
+    studentPhoto.style.display = "block";
+
+    studentPhoto.onerror = () => {
+      studentPhoto.onerror = null; // prevent loop
+      studentPhoto.src = "https://via.placeholder.com/120x160.png?text=No+Photo";
+      logToTerminal(`[WARN] No photo found for ${rawMatric}. Using fallback.`);
+    };
+
+    logToTerminal(`[MODAL] Viewing details and photo of ${rawMatric}`);
+    openModal();
+  }
+
+  /* ------------ Wire up search button & enter key ------------ */
+  searchBtn.addEventListener("click", performSearch);
+  searchInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") performSearch();
+  });
+
+  /* ------------ Disclaimer / Boot ------------ */
+  const disclaimer = `
+[BOOT] Initializing screen...
+[NOTICE] This tool is for educational purposes only.
+[NOTICE] Do not use it to commit fraud or cybercrime.
+[TERMS] Usage implies acceptance of the terms.
+`;
+  
+  logToTerminal(disclaimer.trim());
+  function logout() {
+    localStorage.removeItem("student_matric");
+    localStorage.removeItem("student_surname");
+    
+
+
+  }
+
+</script>
 </body>
 </html>
