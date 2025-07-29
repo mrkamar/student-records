@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Login - Student Records</title>
+  <title>Student Access</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <style>
@@ -97,17 +97,16 @@
 </head>
 <body>
 
-  <h2>Student Login</h2>
-  <form id="loginForm">
+  <h2>Student Access Panel</h2>
+  <form id="accessForm">
     <label for="matric">Matric Number</label>
     <input type="text" id="matric" placeholder="Enter Matric Number" required />
 
     <label for="surname">Surname</label>
     <input type="text" id="surname" placeholder="Enter Surname" required />
 
-    <button type="submit">Login</button>
+    <button type="submit">Enter</button>
 
-    <!-- Debugging Button -->
     <button type="button" id="sampleBtn" onclick="viewSampleMatricNumbers()">
       View 5 Sample Matric Nos
     </button>
@@ -147,7 +146,7 @@
       });
     }
 
-    async function handleLogin(e) {
+    async function handleAccess(e) {
       e.preventDefault();
 
       const matric = document.getElementById("matric").value.trim().toLowerCase();
@@ -173,14 +172,14 @@
         if (matched) {
           localStorage.setItem("student_matric", matched["Matric No"]);
           localStorage.setItem("student_surname", matched["Surname"]);
-          showToast("Login successful!", "success");
+          showToast("Access granted ✅", "success");
           setTimeout(() => window.location.href = "index.html", 1000);
         } else {
-          showToast("No matching student found.");
+          showToast("No matching record found.");
         }
       } catch (err) {
         console.error(err);
-        showToast("Failed to load records.");
+        showToast("Error loading student records.");
       }
     }
 
@@ -204,7 +203,7 @@
       }
     }
 
-    document.getElementById("loginForm").addEventListener("submit", handleLogin);
+    document.getElementById("accessForm").addEventListener("submit", handleAccess);
   </script>
 </body>
 </html>
