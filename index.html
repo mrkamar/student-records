@@ -57,6 +57,10 @@
     .alert {
       font-family: 'Fira Mono', monospace;
     }
+
+    #goButton {
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -86,6 +90,10 @@
       </div>
 
       <div id="message" class="mt-3"></div>
+
+      <div class="d-grid mt-3">
+        <a href="index.html" id="goButton" class="btn btn-success">Go ahead</a>
+      </div>
     </div>
   </div>
 
@@ -99,12 +107,14 @@
     const messageEl = document.getElementById("message");
     const progressContainer = document.getElementById("progressContainer");
     const progressBar = document.getElementById("progressBar");
+    const goButton = document.getElementById("goButton");
 
     btn.addEventListener("click", async () => {
       const dataset = document.getElementById("dataset").value;
       const matricNo = document.getElementById("matricNo").value.trim();
 
       messageEl.innerHTML = "";
+      goButton.style.display = "none";
       progressContainer.classList.remove("d-none");
       progressBar.style.width = "5%";
 
@@ -140,13 +150,9 @@
           progressBar.style.width = "0%";
 
           if (found) {
-            // Success
-            messageEl.innerHTML = `<div class="alert alert-success">✅ Found! You can now continue...</div>`;
-            setTimeout(() => {
-              window.location.href = "index.html";
-            }, 1500);
+            messageEl.innerHTML = `<div class="alert alert-success">✅ Found! You can now continue.</div>`;
+            goButton.style.display = "block";
           } else {
-            // Not found
             messageEl.innerHTML = `<div class="alert alert-danger">❌ Matric Number not found.</div>`;
           }
         }, 500);
