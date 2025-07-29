@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Continue | Student Verification</title>
+  <title>Verify Matric Number</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
   <style>
@@ -10,72 +10,94 @@
       background-color: #121214;
       color: #e0e0e0;
       font-family: 'Fira Mono', monospace;
-      min-height: 100vh;
       display: flex;
-      align-items: center;
       justify-content: center;
+      align-items: center;
+      min-height: 100vh;
     }
-
-    .card {
+    .message {
       background-color: #1f2024;
-      border: none;
-      color: #e0e0e0;
-      box-shadow: 0 0 20px rgba(0, 0, 0, 0.6);
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 0 12px rgba(0, 0, 0, 0.5);
+      text-align: center;
+      max-width: 500px;
     }
-
-    .form-control,
-    .form-select {
-      background-color: #121214;
-      border: 1.5px solid #7affc4;
-      color: #7affc4;
-    }
-
-    .form-control:focus,
-    .form-select:focus {
-      border-color: #55e6b8;
-      box-shadow: 0 0 0 0.25rem #55e6b866;
-      background-color: #18191d;
-      color: #7affc4;
-    }
-
-    .btn-success {
-      background-color: #55e6b8;
-      border: none;
-      color: #121214;
-      font-weight: bold;
-    }
-
-    .btn-success:hover {
-      background-color: #7affc4;
+    .spinner-border {
+      width: 2rem;
+      height: 2rem;
     }
   </style>
 </head>
 <body>
-  <div class="container px-3">
-    <div class="card p-4 w-100" style="max-width: 420px;">
-      <h4 class="mb-4 text-center text-info">Student Verification</h4>
-
-      <!-- HTML-only form -->
-      <form action="index.html" method="get">
-        <div class="mb-3">
-          <label for="dataset" class="form-label">Select Program</label>
-          <select id="dataset" name="program" class="form-select" required>
-            <option value="">-- Choose --</option>
-            <option value="morning">Morning (Regular)</option>
-            <option value="spat">SPAT (Evening)</option>
-          </select>
-        </div>
-
-        <div class="mb-3">
-          <label for="matricNo" class="form-label">Matric Number</label>
-          <input type="text" id="matricNo" name="matric" class="form-control" placeholder="Enter your Matric Number" required />
-        </div>
-
-        <div class="d-grid">
-          <button type="submit" class="btn btn-success">Go ahead</button>
-        </div>
-      </form>
-    </div>
+  <div class="message">
+    <div id="statusText">Verifying matric number...</div>
+    <div class="spinner-border text-info mt-3" role="status"></div>
   </div>
+
+  <script>
+    const urls = {
+      morning: "https://raw.githubusercontent.com/mrkamar/student-records/main/morning.csv",
+      spat: "https://raw.githubusercontent.com/mrkamar/student-records/main/spat.csv"
+    };
+
+    async function fetchCSV(url) {
+      const response = await fetch(url);
+      return await response.text();
+    }
+
+    function parseCSV(data) {
+      const rows = data.trim().split("\n");
+      const headers = rows[0].replace(/"/g, "").split(",");
+      return rows.slice(1).map(line => {
+        const cells = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g)?.map(c => c.replace(/"/g, "")) || [];
+        const obj = {};
+        headers.forEach((h, i) => (obj[h.trim()] = (cells[i] || "").trim()));
+        return obj;
+      });
+    }
+
+    async function verifyMatric() {
+      const matric = prompt("Enter your Matric Number:");
+      if (!matric) {
+        alert("Matric number is required.");
+        document.getElementById("statusText").innerText = "Verification cancelled.";
+        return;
+      }
+
+      document.getElementById("statusText").innerText = "Checking Morning records...";
+
+      try {
+        let data = await fetchCSV(urls.morning);
+        let records = parseCSV(data);
+        let found = records.some(r => r["Matric No"]?.toLowerCase() === matric.toLowerCase());
+
+        if (found) {
+          window.location.href = "index.html";
+          return;
+        }
+
+        document.getElementById("statusText").innerText = "Not found in Morning. Checking SPAT records...";
+
+        data = await fetchCSV(urls.spat);
+        records = parseCSV(data);
+        found = records.some(r => r["Matric No"]?.toLowerCase() === matric.toLowerCase());
+
+        if (found) {
+          window.location.href = "index.html";
+        } else {
+          alert("Matric number not found in any record.");
+          document.getElementById("statusText").innerText = "Matric number not found.";
+        }
+
+      } catch (error) {
+        alert("Error fetching data. Please try again later.");
+        console.error(error);
+        document.getElementById("statusText").innerText = "An error occurred.";
+      }
+    }
+
+    verifyMatric();
+  </script>
 </body>
 </html>
