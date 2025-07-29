@@ -38,28 +38,15 @@
       color: #7affc4;
     }
 
-    .btn-primary {
+    .btn-success {
       background-color: #55e6b8;
       border: none;
       color: #121214;
       font-weight: bold;
     }
 
-    .btn-primary:hover {
+    .btn-success:hover {
       background-color: #7affc4;
-      color: #121214;
-    }
-
-    .progress-bar {
-      background-color: #55e6b8;
-    }
-
-    .alert {
-      font-family: 'Fira Mono', monospace;
-    }
-
-    #goButton {
-      display: none;
     }
   </style>
 </head>
@@ -68,101 +55,26 @@
     <div class="card p-4 w-100" style="max-width: 420px;">
       <h4 class="mb-4 text-center text-info">Student Verification</h4>
 
-      <div class="mb-3">
-        <label for="dataset" class="form-label">Select Program</label>
-        <select id="dataset" class="form-select">
-          <option value="morning">Morning (Regular)</option>
-          <option value="spat">SPAT (Evening)</option>
-        </select>
-      </div>
+      <form action="index.html" method="get">
+        <div class="mb-3">
+          <label for="dataset" class="form-label">Select Program</label>
+          <select id="dataset" name="program" class="form-select" required>
+            <option value="">-- Choose --</option>
+            <option value="morning">Morning (Regular)</option>
+            <option value="spat">SPAT (Evening)</option>
+          </select>
+        </div>
 
-      <div class="mb-3">
-        <label for="matricNo" class="form-label">Matric Number</label>
-        <input type="text" id="matricNo" class="form-control" placeholder="Enter your Matric Number" />
-      </div>
+        <div class="mb-3">
+          <label for="matricNo" class="form-label">Matric Number</label>
+          <input type="text" id="matricNo" name="matric" class="form-control" placeholder="Enter your Matric Number" required />
+        </div>
 
-      <div class="d-grid">
-        <button id="continueBtn" class="btn btn-primary">Continue</button>
-      </div>
-
-      <div class="progress mt-4 d-none" id="progressContainer">
-        <div class="progress-bar progress-bar-striped progress-bar-animated" id="progressBar" role="progressbar" style="width: 0%"></div>
-      </div>
-
-      <div id="message" class="mt-3"></div>
-
-      <div class="d-grid mt-3">
-        <a href="index.html" id="goButton" class="btn btn-success">Go ahead</a>
-      </div>
+        <div class="d-grid">
+          <button type="submit" class="btn btn-success">Go ahead</button>
+        </div>
+      </form>
     </div>
   </div>
-
-  <script>
-    const urls = {
-      morning: "https://raw.githubusercontent.com/mrkamar/student-records/refs/heads/main/morning.csv",
-      spat: "https://raw.githubusercontent.com/mrkamar/student-records/refs/heads/main/spat.csv",
-    };
-
-    const btn = document.getElementById("continueBtn");
-    const messageEl = document.getElementById("message");
-    const progressContainer = document.getElementById("progressContainer");
-    const progressBar = document.getElementById("progressBar");
-    const goButton = document.getElementById("goButton");
-
-    btn.addEventListener("click", async () => {
-      const dataset = document.getElementById("dataset").value;
-      const matricNo = document.getElementById("matricNo").value.trim();
-
-      messageEl.innerHTML = "";
-      goButton.style.display = "none";
-      progressContainer.classList.remove("d-none");
-      progressBar.style.width = "5%";
-
-      if (!matricNo) {
-        progressContainer.classList.add("d-none");
-        messageEl.innerHTML = `<div class="alert alert-warning mt-2">Please enter your Matric Number.</div>`;
-        return;
-      }
-
-      try {
-        const res = await fetch(urls[dataset], { cache: "no-store" });
-        const text = await res.text();
-        progressBar.style.width = "40%";
-
-        const lines = text.trim().split("\n");
-        const headers = lines[0].replace(/"/g, "").split(",");
-        const records = lines.slice(1).map(line => {
-          const cells = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g)
-                         ?.map(cell => cell.replace(/"/g, "")) || [];
-          const obj = {};
-          headers.forEach((h, i) => (obj[h.trim()] = (cells[i] || "").trim()));
-          return obj;
-        });
-
-        progressBar.style.width = "70%";
-
-        const found = records.some(row => (row["Matric No"] || "").toLowerCase() === matricNo.toLowerCase());
-
-        progressBar.style.width = "100%";
-
-        setTimeout(() => {
-          progressContainer.classList.add("d-none");
-          progressBar.style.width = "0%";
-
-          if (found) {
-            messageEl.innerHTML = `<div class="alert alert-success">✅ Found! You can now continue.</div>`;
-            goButton.style.display = "block";
-          } else {
-            messageEl.innerHTML = `<div class="alert alert-danger">❌ Matric Number not found.</div>`;
-          }
-        }, 500);
-
-      } catch (err) {
-        progressContainer.classList.add("d-none");
-        messageEl.innerHTML = `<div class="alert alert-danger">An error occurred while checking the record. Please try again.</div>`;
-        console.error(err);
-      }
-    });
-  </script>
 </body>
 </html>
