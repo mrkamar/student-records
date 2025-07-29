@@ -514,6 +514,8 @@
       if (foundStudent) {
         // Successful login
         currentStudent = foundStudent;
+        sessionStorage.setItem("studentData", JSON.stringify(foundStudent));
+
         showToast("Login successful!", "success");
         
         // Store student info
@@ -654,7 +656,7 @@
   }
 
   /* ------------ Modal Functionality ------------ */
-  let lastFocusedBeforeModal = null;
+let lastFocusedBeforeModal = null;
 
   function focusableElementsIn(el) {
     return el.querySelectorAll('a[href], button, input, textarea, select, [tabindex]:not([tabindex="-1"])');
@@ -740,10 +742,23 @@
 
   /* ------------ Initialize ------------ */
   document.addEventListener('DOMContentLoaded', () => {
-    checkSystemStatus();
-    // Check system status every 5 minutes
-    setInterval(checkSystemStatus, 5 * 60 * 1000);
-  });
+  checkSystemStatus();
+
+  const savedStudent = sessionStorage.getItem("studentData");
+  if (savedStudent) {
+    currentStudent = JSON.parse(savedStudent);
+    studentNameEl.textContent = `${currentStudent["Surname"]} ${currentStudent["Othernames"] || ''}`;
+
+    loginContainer.style.display = "none";
+    welcomeMessage.style.display = "block";
+    searchSection.style.display = "flex";
+    resultsEl.style.display = "block";
+  }
+
+  // Check system status every 5 minutes
+  setInterval(checkSystemStatus, 5 * 60 * 1000);
+});
+
 </script>
 </body>
 </html>
