@@ -8,29 +8,35 @@
   /* Base */
   body {
     margin: 0;
+    padding: 0;
     background-color: #121214;
     color: #e0e0e0;
     font-family: 'Fira Mono', Consolas, 'Courier New', monospace;
+    overflow-x: hidden;
   }
 
   /* Navigation */
   .nav-container {
-    max-width: 900px;
+    max-width: 100%;
     margin: 20px auto;
+    padding: 0 15px;
     display: flex;
     justify-content: center;
-    gap: 15px;
+    flex-wrap: wrap;
+    gap: 10px;
   }
   
   .nav-btn {
     background-color: #333;
     border: 1px solid #7affc4;
     color: #7affc4;
-    padding: 10px 20px;
-    border-radius: 8px;
+    padding: 8px 15px;
+    border-radius: 6px;
     text-decoration: none;
     font-family: 'Fira Mono', monospace;
     transition: all 0.3s ease;
+    font-size: 14px;
+    white-space: nowrap;
   }
   
   .nav-btn:hover {
@@ -38,13 +44,23 @@
     color: #121214;
   }
 
+  /* Main container */
+  .main-container {
+    max-width: 100%;
+    width: 95%;
+    margin: 0 auto;
+    padding: 0 10px;
+    box-sizing: border-box;
+  }
+
   /* Login container */
   .login-container {
     background: linear-gradient(145deg, #1f2024, #18191d);
     border-radius: 12px;
     max-width: 500px;
+    width: 100%;
     margin: 20px auto;
-    padding: 30px;
+    padding: 20px;
     box-shadow:
       inset 0 0 15px rgba(255, 255, 255, 0.07),
       0 4px 15px rgba(0, 0, 0, 0.7);
@@ -55,36 +71,39 @@
 
   .login-title {
     text-align: center;
-    margin-bottom: 25px;
-    font-size: 24px;
+    margin-bottom: 20px;
+    font-size: 22px;
     color: #7affc4;
+    word-break: break-word;
   }
 
   .login-form {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 15px;
   }
 
   .form-group {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
   }
 
   .form-group label {
-    font-size: 16px;
+    font-size: 14px;
   }
 
   .form-control {
     background: #121214;
     border: 1.8px solid #7affc4;
     color: #7affc4;
-    font-size: 16px;
-    padding: 12px 14px;
-    border-radius: 8px;
+    font-size: 14px;
+    padding: 10px 12px;
+    border-radius: 6px;
     font-family: 'Fira Mono', monospace;
     transition: border-color 0.3s ease;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .form-control:focus {
@@ -97,15 +116,17 @@
   .btn {
     background-color: #55e6b8;
     border: none;
-    padding: 14px;
+    padding: 12px;
     color: #121214;
     font-weight: 600;
-    font-size: 16px;
-    border-radius: 10px;
+    font-size: 14px;
+    border-radius: 8px;
     cursor: pointer;
     font-family: 'Fira Mono', monospace;
     transition: background-color 0.3s ease;
-    margin-top: 10px;
+    margin-top: 8px;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .btn:hover { background-color: #7affc4; }
@@ -130,147 +151,169 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 24px;
+    font-size: 20px;
     color: #ff4e4e;
     border-radius: 12px;
     z-index: 10;
+    padding: 0 10px;
+    text-align: center;
   }
 
-  /* Search section (hidden initially) */
+  /* Search section */
   .search-section {
-    max-width: 900px;
+    max-width: 100%;
+    width: 100%;
     margin: 15px auto;
-    padding: 15px 20px;
+    padding: 12px 15px;
     background: #1f2024;
-    border-radius: 12px;
-    display: none; /* Initially hidden */
+    border-radius: 10px;
+    display: none;
     flex-wrap: wrap;
-    gap: 12px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.8);
+    gap: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.8);
     align-items: center;
+    box-sizing: border-box;
   }
 
-  select, input[type="text"] {
+  .search-section select, 
+  .search-section input[type="text"] {
     background: #121214;
     border: 1.8px solid #7affc4;
     color: #7affc4;
-    font-size: 16px;
-    padding: 10px 14px;
-    border-radius: 8px;
+    font-size: 14px;
+    padding: 8px 12px;
+    border-radius: 6px;
     flex-grow: 1;
-    min-width: 160px;
+    min-width: 120px;
+    width: 100%;
     font-family: 'Fira Mono', monospace;
     transition: border-color 0.3s ease;
+    box-sizing: border-box;
   }
-  select:focus, input[type="text"]:focus {
+
+  .search-section select:focus, 
+  .search-section input[type="text"]:focus {
     outline: none;
     border-color: #55e6b8;
-    box-shadow: 0 0 12px #55e6b888;
+    box-shadow: 0 0 10px #55e6b888;
     background-color: #18191d;
   }
-  button {
+
+  .search-section button {
     background-color: #55e6b8;
     border: none;
-    padding: 12px 25px;
+    padding: 10px 20px;
     color: #121214;
     font-weight: 600;
-    font-size: 16px;
-    border-radius: 10px;
+    font-size: 14px;
+    border-radius: 8px;
     cursor: pointer;
     flex-shrink: 0;
     font-family: 'Fira Mono', monospace;
     transition: background-color 0.3s ease;
+    width: 100%;
+    box-sizing: border-box;
   }
-  button:hover { background-color: #7affc4; }
+
+  .search-section button:hover { background-color: #7affc4; }
 
   /* Results container */
   #results {
-    max-width: 900px;
-    margin: 20px auto 40px;
+    max-width: 100%;
+    width: 100%;
+    margin: 15px auto 25px;
     background: #1f2024;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.8);
-    padding: 12px;
-    overflow-x: hidden;
-    overflow-y: visible;
-    max-height: none;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.8);
+    padding: 10px;
+    overflow-x: auto;
     word-break: break-word;
-    display: none; /* Initially hidden */
+    display: none;
+    box-sizing: border-box;
   }
 
-  table {
+  #results table {
     width: 100%;
     border-collapse: collapse;
     color: #7affc4;
     font-family: 'Fira Mono', monospace;
-    font-size: 14px;
+    font-size: 13px;
     table-layout: fixed;
+    min-width: 600px;
   }
-  th, td {
-    padding: 8px 10px;
-    border-bottom: 1.5px solid #333;
+
+  #results th, #results td {
+    padding: 6px 8px;
+    border-bottom: 1px solid #333;
     text-align: left;
     word-wrap: break-word;
   }
-  th { border-bottom: 2px solid #55e6b8; }
-  tr:hover { background-color: #33373d; }
-  a {
+
+  #results th { 
+    border-bottom: 2px solid #55e6b8;
+    font-size: 14px;
+  }
+
+  #results tr:hover { background-color: #33373d; }
+
+  #results a {
     color: #7affc4;
     text-decoration: underline;
     cursor: pointer;
     transition: color 0.3s ease;
+    word-break: break-all;
   }
-  a:hover { color: #55e6b8; }
 
-  /* Modal */
-  .modal {
-    position: fixed;
-    top: 12%;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 80%;
-    max-width: 600px;
-    background-color: #1f2024;
-    color: #7affc4;
-    border-radius: 14px;
-    box-shadow: 0 0 30px #55e6b8aa;
-    padding: 30px 35px;
-    font-family: 'Fira Mono', monospace;
-    font-size: 16px;
-    white-space: pre-wrap;
-    user-select: text;
+  #results a:hover { color: #55e6b8; }
+
+  /* Welcome message */
+  .welcome-message {
+    text-align: center;
+    margin: 15px auto;
+    max-width: 100%;
+    width: 100%;
     display: none;
-    z-index: 1200;
-
-    /* scrollable vertically */
-    max-height: 80vh;
-    overflow-y: auto;
+    padding: 0 10px;
+    box-sizing: border-box;
   }
-  .modal-close {
-    position: absolute;
-    top: 12px;
-    right: 20px;
-    font-size: 26px;
-    color: #ff7070;
-    font-weight: bold;
-    cursor: pointer;
-    user-select: none;
-    background: transparent;
+
+  .welcome-message h3 {
+    font-size: 18px;
+    margin: 10px 0;
+    word-break: break-word;
+  }
+
+  /* Logout button */
+  .logout-btn {
+    background-color: #ff4e4e;
     border: none;
+    padding: 6px 12px;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-left: 10px;
+    font-family: 'Fira Mono', monospace;
+    font-size: 13px;
+    display: none;
+    white-space: nowrap;
   }
 
+  /* Progress bar */
   #progress-container {
-    max-width: 900px;
+    max-width: 100%;
+    width: 100%;
     margin: 10px auto 0 auto;
     background: #121214;
-    border-radius: 8px;
+    border-radius: 5px;
     overflow: hidden;
-    height: 8px;
-    box-shadow: inset 0 0 6px #7affc4aa;
+    height: 6px;
+    box-shadow: inset 0 0 4px #7affc4aa;
     display: none;
+    box-sizing: border-box;
   }
+
   #progress-bar {
-    height: 8px;
+    height: 6px;
     background: #55e6b8;
     width: 0%;
     transition: width 0.3s ease;
@@ -279,91 +322,177 @@
   /* Toast */
   #toast {
     position: fixed;
-    bottom: 30px;
-    right: 30px;
+    bottom: 20px;
+    right: 10px;
+    left: 10px;
     background: #ff4e4e;
     color: #fff;
-    padding: 14px 20px;
-    border-radius: 8px;
+    padding: 12px 15px;
+    border-radius: 6px;
     font-family: 'Fira Mono', monospace;
     display: none;
     z-index: 2000;
-    box-shadow: 0 0 20px #ff4e4ecc;
+    box-shadow: 0 0 15px #ff4e4ecc;
     transition: opacity 0.4s ease;
-    max-width: 90vw;
+    max-width: 100%;
+    box-sizing: border-box;
+    text-align: center;
   }
+
   #toast.success { background: #2ea043; }
   #toast.warn { background: #e2b93b; color: #121214; }
 
-  /* Welcome message */
-  .welcome-message {
-    text-align: center;
-    margin: 20px auto;
-    max-width: 900px;
-    display: none; /* Initially hidden */
+  /* Modal */
+  .modal {
+    position: fixed;
+    top: 10%;
+    left: 5%;
+    right: 5%;
+    width: 90%;
+    max-width: 600px;
+    background-color: #1f2024;
+    color: #7affc4;
+    border-radius: 12px;
+    box-shadow: 0 0 25px #55e6b8aa;
+    padding: 20px;
+    font-family: 'Fira Mono', monospace;
+    font-size: 14px;
+    white-space: pre-wrap;
+    user-select: text;
+    display: none;
+    z-index: 1200;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-sizing: border-box;
+  }
+
+  .modal-close {
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    font-size: 22px;
+    color: #ff7070;
+    font-weight: bold;
+    cursor: pointer;
+    user-select: none;
+    background: transparent;
+    border: none;
+  }
+
+  #studentModalTitle {
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-size: 18px;
+    word-break: break-word;
+  }
+
+  #studentPhoto {
+    width: 100px;
+    max-width: 100%;
+    border-radius: 6px;
+    margin: 0 auto 10px auto;
+    display: none;
+  }
+
+  #modalContent {
+    font-size: 13px;
+    line-height: 1.4;
+    word-break: break-word;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+  }
+
+  @media (max-width: 600px) {
+    .nav-container {
+      flex-direction: column;
+      align-items: center;
+    }
+    
+    .logout-btn {
+      margin-left: 0;
+      margin-top: 8px;
+    }
+    
+    .search-section select, 
+    .search-section input[type="text"] {
+      min-width: 100%;
+    }
+    
+    #results table {
+      font-size: 12px;
+    }
+    
+    .modal {
+      padding: 15px;
+    }
   }
 </style>
 </head>
 <body>
   <!-- Navigation -->
   <div class="nav-container">
+    <a href="index.html" class="nav-btn">Home</a>
     <a href="about.html" class="nav-btn">About</a>
     <a href="result.html" class="nav-btn">Result Portal</a>
+    <button class="logout-btn" id="logoutBtn">Logout</button>
   </div>
 
-  <!-- Login Form -->
-  <div class="login-container" id="loginContainer">
-    <h2 class="login-title">Student Login</h2>
-    <form class="login-form" id="loginForm">
-      <div class="form-group">
-        <label for="matricNo">Matric Number</label>
-        <input type="text" id="matricNo" class="form-control" placeholder="e.g., ND/21/CSC/001" required />
-      </div>
-      <div class="form-group">
-        <label for="surname">Surname</label>
-        <input type="text" id="surname" class="form-control" placeholder="Enter your surname" required />
-      </div>
-      <button type="submit" class="btn" id="loginBtn">Login</button>
-    </form>
+  <!-- Main Content -->
+  <div class="main-container">
+    <!-- Login Form -->
+    <div class="login-container" id="loginContainer">
+      <h2 class="login-title">Student Login</h2>
+      <form class="login-form" id="loginForm">
+        <div class="form-group">
+          <label for="matricNo">Matric Number</label>
+          <input type="text" id="matricNo" class="form-control" placeholder="e.g., ND/21/CSC/001" required />
+        </div>
+        <div class="form-group">
+          <label for="surname">Surname</label>
+          <input type="text" id="surname" class="form-control" placeholder="Enter your surname" required />
+        </div>
+        <button type="submit" class="btn" id="loginBtn">Login</button>
+      </form>
+    </div>
+
+    <!-- Welcome Message -->
+    <div class="welcome-message" id="welcomeMessage">
+      <h3>Welcome, <span id="studentName"></span></h3>
+    </div>
+
+    <!-- Search Section -->
+    <div class="search-section" id="searchSection" role="search">
+      <select id="dataset" title="Select Dataset" aria-label="Select dataset">
+        <option value="morning">Morning (Regular)</option>
+        <option value="spat">SPAT (Evening)</option>
+      </select>
+
+      <select id="searchMode" title="Search Mode" aria-label="Search mode">
+        <option value="default">Contains</option>
+        <option value="exact">Exact Match</option>
+        <option value="regex">Regex</option>
+        <option value="column">Column Filter</option>
+      </select>
+
+      <input type="text" id="search" placeholder="Enter Name, Matric No, etc" title="Search input" aria-label="Search field" />
+
+      <input type="text" id="adminKey" placeholder="Admin Key for override" title="Admin override key" aria-label="Admin override key" />
+
+      <button id="searchBtn" type="button" aria-label="Search">Search</button>
+    </div>
+
+    <div id="progress-container" aria-hidden="true">
+      <div id="progress-bar"></div>
+    </div>
+
+    <div id="results" aria-live="polite"></div>
   </div>
 
-  <!-- Welcome Message -->
-  <div class="welcome-message" id="welcomeMessage">
-    <h3>Welcome, <span id="studentName"></span></h3>
-  </div>
-
-  <!-- Search Section -->
-  <div class="search-section" id="searchSection" role="search">
-    <select id="dataset" title="Select Dataset" aria-label="Select dataset">
-      <option value="morning">Morning (Regular)</option>
-      <option value="spat">SPAT (Evening)</option>
-    </select>
-
-    <select id="searchMode" title="Search Mode" aria-label="Search mode">
-      <option value="default">Contains</option>
-      <option value="exact">Exact Match</option>
-      <option value="regex">Regex</option>
-      <option value="column">Column Filter</option>
-    </select>
-
-    <input type="text" id="search" placeholder="Enter Name, Matric No, etc" title="Search input" aria-label="Search field" />
-
-    <input type="text" id="adminKey" placeholder="Admin Key for override" title="Admin override key" aria-label="Admin override key" />
-
-    <button id="searchBtn" type="button" aria-label="Search">Search</button>
-  </div>
-
-  <div id="progress-container" aria-hidden="true">
-    <div id="progress-bar"></div>
-  </div>
-
-  <div id="results" aria-live="polite"></div>
-
+  <!-- Modal -->
   <div class="modal" id="studentModal" role="dialog" aria-modal="true" aria-labelledby="studentModalTitle" aria-hidden="true">
     <button id="closeModalBtn" class="modal-close" aria-label="Close details">×</button>
-    <h2 id="studentModalTitle" style="margin-top:0;margin-bottom:10px;">Student Details</h2>
-    <img id="studentPhoto" src="" alt="Student Photo"
-         style="width:120px;border-radius:8px;margin:0 auto 15px auto;display:none;" />
+    <h2 id="studentModalTitle">Student Details</h2>
+    <img id="studentPhoto" src="" alt="Student Photo" />
     <pre id="modalContent" tabindex="0"></pre>
   </div>
 
@@ -393,6 +522,7 @@
   const closeModalBtn = document.getElementById("closeModalBtn");
   const modalContent = document.getElementById("modalContent");
   const studentPhoto = document.getElementById("studentPhoto");
+  const logoutBtn = document.getElementById("logoutBtn");
 
   // System state
   let systemLocked = false;
@@ -402,7 +532,7 @@
   function showToast(message, type = "error", duration = 3000) {
     const toast = document.getElementById('toast');
     toast.textContent = message;
-    toast.className = ""; // reset
+    toast.className = "";
     if (type === "success") toast.classList.add("success");
     if (type === "warn") toast.classList.add("warn");
     toast.style.display = 'block';
@@ -449,6 +579,50 @@
     });
   }
 
+  /* ------------ Session Management ------------ */
+  function saveSession(student) {
+    localStorage.setItem('loggedIn', 'true');
+    localStorage.setItem('studentName', `${student["Surname"]} ${student["Othernames"] || ''}`);
+    localStorage.setItem('studentData', JSON.stringify(student));
+  }
+
+  function clearSession() {
+    localStorage.removeItem('loggedIn');
+    localStorage.removeItem('studentName');
+    localStorage.removeItem('studentData');
+  }
+
+  function checkSession() {
+    return localStorage.getItem('loggedIn') === 'true';
+  }
+
+  function loadSession() {
+    if (checkSession()) {
+      currentStudent = JSON.parse(localStorage.getItem('studentData'));
+      studentNameEl.textContent = localStorage.getItem('studentName');
+      showLoggedInState();
+    }
+  }
+
+  function showLoggedInState() {
+    loginContainer.style.display = "none";
+    welcomeMessage.style.display = "block";
+    searchSection.style.display = "flex";
+    resultsEl.style.display = "block";
+    logoutBtn.style.display = "block";
+  }
+
+  function logout() {
+    clearSession();
+    currentStudent = null;
+    loginContainer.style.display = "block";
+    welcomeMessage.style.display = "none";
+    searchSection.style.display = "none";
+    resultsEl.style.display = "none";
+    logoutBtn.style.display = "none";
+    showToast("You have been logged out", "success");
+  }
+
   /* ------------ System Lock Handling ------------ */
   async function checkSystemStatus() {
     try {
@@ -456,13 +630,15 @@
       systemLocked = cmd.status === "off";
       
       if (systemLocked) {
-        // Apply locked state to login container
         loginContainer.classList.add("system-locked");
         loginBtn.disabled = true;
         
-        // Show lock message
         const lockMessage = cmd.message || "The system is currently locked by administrator.";
         showToast(lockMessage, "warn", 5000);
+        
+        if (checkSession()) {
+          logout();
+        }
       } else {
         loginContainer.classList.remove("system-locked");
         loginBtn.disabled = false;
@@ -490,11 +666,9 @@
     }
 
     try {
-      // Show loading state
       loginBtn.disabled = true;
       loginBtn.textContent = "Verifying...";
 
-      // Check both datasets
       const [morningData, spatData] = await Promise.all([
         fetchCSVData(urls.morning),
         fetchCSVData(urls.spat)
@@ -503,7 +677,6 @@
       const morningRecords = parseCSV(morningData);
       const spatRecords = parseCSV(spatData);
 
-      // Search for matching student
       const foundStudent = [...morningRecords, ...spatRecords].find(student => {
         const studentMatric = (student["Matric No"] || "").toLowerCase().trim();
         const studentSurname = (student["Surname"] || "").toLowerCase().trim();
@@ -512,21 +685,11 @@
       });
 
       if (foundStudent) {
-        // Successful login
         currentStudent = foundStudent;
+        saveSession(foundStudent);
         showToast("Login successful!", "success");
-        
-        // Store student info
         studentNameEl.textContent = `${foundStudent["Surname"]} ${foundStudent["Othernames"] || ''}`;
-        
-        // Hide login, show search interface
-        loginContainer.style.display = "none";
-        welcomeMessage.style.display = "block";
-        searchSection.style.display = "flex";
-        resultsEl.style.display = "block";
-        
-        // Focus search input
-        searchInput.focus();
+        showLoggedInState();
       } else {
         showToast("Invalid credentials. Please try again.", "error");
       }
@@ -534,7 +697,6 @@
       console.error("Login error:", error);
       showToast("Error verifying credentials. Please try again.", "error");
     } finally {
-      // Reset login button
       loginBtn.disabled = false;
       loginBtn.textContent = "Login";
     }
@@ -561,7 +723,7 @@
       if (keyEntered !== cmd.adminKey) {
         const shutdownMsg = cmd.message || "Tool is currently disabled by admin control.";
         showToast(shutdownMsg + " Enter a valid override key to continue.", "warn", 4000);
-        document.getElementById("results").innerHTML = "";
+        resultsEl.innerHTML = "";
         return;
       }
     }
@@ -573,9 +735,8 @@
       const csv = await fetchCSVData(csvUrl);
       const records = parseCSV(csv);
 
-      // --- Search logic ---
       const searchValLower = rawSearchVal.toLowerCase();
-      const isQuoted = /^"(.*)"$/.test(rawSearchVal); // "exact phrase"
+      const isQuoted = /^"(.*)"$/.test(rawSearchVal);
       let matched = [];
 
       if (mode === "regex") {
@@ -618,8 +779,7 @@
         return;
       }
 
-      let html =
-        "<table><tr><th>Matric No</th><th>Surname</th><th>Othernames</th></tr>";
+      let html = "<table><tr><th>Matric No</th><th>Surname</th><th>Othernames</th></tr>";
       matched.forEach((row) => {
         const linkData = encodeURIComponent(JSON.stringify(row));
         html += `<tr>
@@ -632,7 +792,6 @@
 
       resultsEl.innerHTML = html;
 
-      // Delegate clicks for details
       resultsEl.querySelectorAll(".detail-link").forEach(a => {
         a.addEventListener("click", (ev) => {
           ev.preventDefault();
@@ -725,7 +884,7 @@
     studentPhoto.style.display = "block";
 
     studentPhoto.onerror = () => {
-      studentPhoto.onerror = null; // prevent loop
+      studentPhoto.onerror = null;
       studentPhoto.src = "https://via.placeholder.com/120x160.png?text=No+Photo";
     };
 
@@ -738,10 +897,12 @@
     if (e.key === "Enter") performSearch();
   });
 
+  logoutBtn.addEventListener("click", logout);
+
   /* ------------ Initialize ------------ */
   document.addEventListener('DOMContentLoaded', () => {
+    loadSession();
     checkSystemStatus();
-    // Check system status every 5 minutes
     setInterval(checkSystemStatus, 5 * 60 * 1000);
   });
 </script>
