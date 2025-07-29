@@ -13,12 +13,37 @@
     font-family: 'Fira Mono', Consolas, 'Courier New', monospace;
   }
 
+  /* Navigation */
+  .nav-container {
+    max-width: 900px;
+    margin: 20px auto;
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+  }
+  
+  .nav-btn {
+    background-color: #333;
+    border: 1px solid #7affc4;
+    color: #7affc4;
+    padding: 10px 20px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-family: 'Fira Mono', monospace;
+    transition: all 0.3s ease;
+  }
+  
+  .nav-btn:hover {
+    background-color: #7affc4;
+    color: #121214;
+  }
+
   /* Login container */
   .login-container {
     background: linear-gradient(145deg, #1f2024, #18191d);
     border-radius: 12px;
     max-width: 500px;
-    margin: 40px auto;
+    margin: 20px auto;
     padding: 30px;
     box-shadow:
       inset 0 0 15px rgba(255, 255, 255, 0.07),
@@ -84,6 +109,32 @@
   }
 
   .btn:hover { background-color: #7affc4; }
+  .btn:disabled {
+    background-color: #555;
+    cursor: not-allowed;
+  }
+
+  /* Locked state */
+  .system-locked {
+    position: relative;
+  }
+  
+  .system-locked::after {
+    content: "🔒 SYSTEM LOCKED";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: #ff4e4e;
+    border-radius: 12px;
+    z-index: 10;
+  }
 
   /* Search section (hidden initially) */
   .search-section {
@@ -254,7 +305,14 @@
 </style>
 </head>
 <body>
-  <div class="login-container">
+  <!-- Navigation -->
+  <div class="nav-container">
+    <a href="about.html" class="nav-btn">About</a>
+    <a href="result.html" class="nav-btn">Result Portal</a>
+  </div>
+
+  <!-- Login Form -->
+  <div class="login-container" id="loginContainer">
     <h2 class="login-title">Student Login</h2>
     <form class="login-form" id="loginForm">
       <div class="form-group">
@@ -265,14 +323,16 @@
         <label for="surname">Surname</label>
         <input type="text" id="surname" class="form-control" placeholder="Enter your surname" required />
       </div>
-      <button type="submit" class="btn">Login</button>
+      <button type="submit" class="btn" id="loginBtn">Login</button>
     </form>
   </div>
 
+  <!-- Welcome Message -->
   <div class="welcome-message" id="welcomeMessage">
     <h3>Welcome, <span id="studentName"></span></h3>
   </div>
 
+  <!-- Search Section -->
   <div class="search-section" id="searchSection" role="search">
     <select id="dataset" title="Select Dataset" aria-label="Select dataset">
       <option value="morning">Morning (Regular)</option>
@@ -302,7 +362,6 @@
   <div class="modal" id="studentModal" role="dialog" aria-modal="true" aria-labelledby="studentModalTitle" aria-hidden="true">
     <button id="closeModalBtn" class="modal-close" aria-label="Close details">×</button>
     <h2 id="studentModalTitle" style="margin-top:0;margin-bottom:10px;">Student Details</h2>
-    <!-- Center-aligned photo -->
     <img id="studentPhoto" src="" alt="Student Photo"
          style="width:120px;border-radius:8px;margin:0 auto 15px auto;display:none;" />
     <pre id="modalContent" tabindex="0"></pre>
@@ -317,16 +376,27 @@
     command: "https://raw.githubusercontent.com/mrkamar/student-records/refs/heads/main/command.json",
   };
 
+  // DOM Elements
+  const loginContainer = document.getElementById("loginContainer");
+  const loginForm = document.getElementById("loginForm");
+  const loginBtn = document.getElementById("loginBtn");
+  const welcomeMessage = document.getElementById("welcomeMessage");
+  const studentNameEl = document.getElementById("studentName");
+  const searchSection = document.getElementById("searchSection");
+  const resultsEl = document.getElementById("results");
   const progressContainer = document.getElementById("progress-container");
   const progressBar = document.getElementById("progress-bar");
   const searchBtn = document.getElementById("searchBtn");
   const searchInput = document.getElementById("search");
   const searchModeEl = document.getElementById("searchMode");
-  const loginForm = document.getElementById("loginForm");
-  const welcomeMessage = document.getElementById("welcomeMessage");
-  const studentNameEl = document.getElementById("studentName");
-  const searchSection = document.getElementById("searchSection");
-  const resultsEl = document.getElementById("results");
+  const modal = document.getElementById("studentModal");
+  const closeModalBtn = document.getElementById("closeModalBtn");
+  const modalContent = document.getElementById("modalContent");
+  const studentPhoto = document.getElementById("studentPhoto");
+
+  // System state
+  let systemLocked = false;
+  let currentStudent = null;
 
   /* ------------ Utilities ------------ */
   function showToast(message, type = "error", duration = 3000) {
@@ -379,9 +449,37 @@
     });
   }
 
+  /* ------------ System Lock Handling ------------ */
+  async function checkSystemStatus() {
+    try {
+      const cmd = await fetchCommand();
+      systemLocked = cmd.status === "off";
+      
+      if (systemLocked) {
+        // Apply locked state to login container
+        loginContainer.classList.add("system-locked");
+        loginBtn.disabled = true;
+        
+        // Show lock message
+        const lockMessage = cmd.message || "The system is currently locked by administrator.";
+        showToast(lockMessage, "warn", 5000);
+      } else {
+        loginContainer.classList.remove("system-locked");
+        loginBtn.disabled = false;
+      }
+    } catch (error) {
+      console.error("Error checking system status:", error);
+    }
+  }
+
   /* ------------ Login Functionality ------------ */
   loginForm.addEventListener("submit", async function(e) {
     e.preventDefault();
+    
+    if (systemLocked) {
+      showToast("System is locked. Please try again later.", "warn");
+      return;
+    }
     
     const matricNo = document.getElementById("matricNo").value.trim();
     const surname = document.getElementById("surname").value.trim();
@@ -393,7 +491,6 @@
 
     try {
       // Show loading state
-      const loginBtn = loginForm.querySelector("button");
       loginBtn.disabled = true;
       loginBtn.textContent = "Verifying...";
 
@@ -416,13 +513,14 @@
 
       if (foundStudent) {
         // Successful login
+        currentStudent = foundStudent;
         showToast("Login successful!", "success");
         
         // Store student info
         studentNameEl.textContent = `${foundStudent["Surname"]} ${foundStudent["Othernames"] || ''}`;
         
         // Hide login, show search interface
-        document.querySelector(".login-container").style.display = "none";
+        loginContainer.style.display = "none";
         welcomeMessage.style.display = "block";
         searchSection.style.display = "flex";
         resultsEl.style.display = "block";
@@ -437,7 +535,6 @@
       showToast("Error verifying credentials. Please try again.", "error");
     } finally {
       // Reset login button
-      const loginBtn = loginForm.querySelector("button");
       loginBtn.disabled = false;
       loginBtn.textContent = "Login";
     }
@@ -458,8 +555,9 @@
     }
 
     const cmd = await fetchCommand();
+    systemLocked = cmd.status === "off";
 
-    if (cmd.status === "off") {
+    if (systemLocked) {
       if (keyEntered !== cmd.adminKey) {
         const shutdownMsg = cmd.message || "Tool is currently disabled by admin control.";
         showToast(shutdownMsg + " Enter a valid override key to continue.", "warn", 4000);
@@ -555,11 +653,7 @@
     }
   }
 
-  /* ------------ Modal (accessibility, focus trap) ------------ */
-  const modal = document.getElementById("studentModal");
-  const closeModalBtn = document.getElementById("closeModalBtn");
-  const modalContent = document.getElementById("modalContent");
-  const studentPhoto = document.getElementById("studentPhoto");
+  /* ------------ Modal Functionality ------------ */
   let lastFocusedBeforeModal = null;
 
   function focusableElementsIn(el) {
@@ -638,10 +732,17 @@
     openModal();
   }
 
-  /* ------------ Wire up search button & enter key ------------ */
+  /* ------------ Event Listeners ------------ */
   searchBtn.addEventListener("click", performSearch);
   searchInput.addEventListener("keydown", (e) => {
     if (e.key === "Enter") performSearch();
+  });
+
+  /* ------------ Initialize ------------ */
+  document.addEventListener('DOMContentLoaded', () => {
+    checkSystemStatus();
+    // Check system status every 5 minutes
+    setInterval(checkSystemStatus, 5 * 60 * 1000);
   });
 </script>
 </body>
