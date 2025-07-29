@@ -13,49 +13,92 @@
     font-family: 'Fira Mono', Consolas, 'Courier New', monospace;
   }
 
-  /* Terminal container */
-  .terminal {
+  /* Login container */
+  .login-container {
     background: linear-gradient(145deg, #1f2024, #18191d);
     border-radius: 12px;
-    max-width: 900px;
-    margin: 20px auto;
-    padding: 20px 25px;
+    max-width: 500px;
+    margin: 40px auto;
+    padding: 30px;
     box-shadow:
       inset 0 0 15px rgba(255, 255, 255, 0.07),
       0 4px 15px rgba(0, 0, 0, 0.7);
     color: #7affc4;
     font-size: 15px;
     line-height: 1.4;
-    height: 220px;
-    overflow-y: auto;
-    user-select: text;
-    white-space: pre-wrap;
   }
-  .terminal[aria-live] {
+
+  .login-title {
+    text-align: center;
+    margin-bottom: 25px;
+    font-size: 24px;
+    color: #7affc4;
+  }
+
+  .login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .form-group label {
+    font-size: 16px;
+  }
+
+  .form-control {
+    background: #121214;
+    border: 1.8px solid #7affc4;
+    color: #7affc4;
+    font-size: 16px;
+    padding: 12px 14px;
+    border-radius: 8px;
+    font-family: 'Fira Mono', monospace;
+    transition: border-color 0.3s ease;
+  }
+
+  .form-control:focus {
     outline: none;
+    border-color: #55e6b8;
+    box-shadow: 0 0 12px #55e6b888;
+    background-color: #18191d;
   }
 
-  .terminal::-webkit-scrollbar { width: 8px; }
-  .terminal::-webkit-scrollbar-track {
-    background: #121214; border-radius: 8px;
-  }
-  .terminal::-webkit-scrollbar-thumb {
-    background: #7affc4cc; border-radius: 8px;
+  .btn {
+    background-color: #55e6b8;
+    border: none;
+    padding: 14px;
+    color: #121214;
+    font-weight: 600;
+    font-size: 16px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-family: 'Fira Mono', monospace;
+    transition: background-color 0.3s ease;
+    margin-top: 10px;
   }
 
-  /* Search section */
+  .btn:hover { background-color: #7affc4; }
+
+  /* Search section (hidden initially) */
   .search-section {
     max-width: 900px;
     margin: 15px auto;
     padding: 15px 20px;
     background: #1f2024;
     border-radius: 12px;
-    display: flex;
+    display: none; /* Initially hidden */
     flex-wrap: wrap;
     gap: 12px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.8);
     align-items: center;
   }
+
   select, input[type="text"] {
     background: #121214;
     border: 1.8px solid #7affc4;
@@ -101,6 +144,7 @@
     overflow-y: visible;
     max-height: none;
     word-break: break-word;
+    display: none; /* Initially hidden */
   }
 
   table {
@@ -199,27 +243,37 @@
   }
   #toast.success { background: #2ea043; }
   #toast.warn { background: #e2b93b; color: #121214; }
+
+  /* Welcome message */
+  .welcome-message {
+    text-align: center;
+    margin: 20px auto;
+    max-width: 900px;
+    display: none; /* Initially hidden */
+  }
 </style>
 </head>
 <body>
-  <div class="top-bar">
-    <h4>Welcome, <span id="studentName">Student</span></h4>
-
-<div class="container text-center mt-4">
-  <div class="d-flex flex-wrap justify-content-center gap-2">
-    
-    <a href="about.html" class="btn btn-secondary">About</a>
-    <a href="result.html" class="btn btn-primary">Result Portal</a>
-  </div>
-</div>
-
-
-  </div>
-  <div class="terminal" id="terminal" tabindex="-1" aria-live="polite" aria-atomic="false">
-    <div id="terminal-content">[Terminal Booting... Please wait]</div>
+  <div class="login-container">
+    <h2 class="login-title">Student Login</h2>
+    <form class="login-form" id="loginForm">
+      <div class="form-group">
+        <label for="matricNo">Matric Number</label>
+        <input type="text" id="matricNo" class="form-control" placeholder="e.g., ND/21/CSC/001" required />
+      </div>
+      <div class="form-group">
+        <label for="surname">Surname</label>
+        <input type="text" id="surname" class="form-control" placeholder="Enter your surname" required />
+      </div>
+      <button type="submit" class="btn">Login</button>
+    </form>
   </div>
 
-  <div class="search-section" role="search">
+  <div class="welcome-message" id="welcomeMessage">
+    <h3>Welcome, <span id="studentName"></span></h3>
+  </div>
+
+  <div class="search-section" id="searchSection" role="search">
     <select id="dataset" title="Select Dataset" aria-label="Select dataset">
       <option value="morning">Morning (Regular)</option>
       <option value="spat">SPAT (Evening)</option>
@@ -257,27 +311,24 @@
   <div id="toast" role="status" aria-live="polite"></div>
 
 <script>
-  
-
   const urls = {
     morning: "https://raw.githubusercontent.com/mrkamar/student-records/refs/heads/main/morning.csv",
     spat: "https://raw.githubusercontent.com/mrkamar/student-records/refs/heads/main/spat.csv",
     command: "https://raw.githubusercontent.com/mrkamar/student-records/refs/heads/main/command.json",
   };
 
-  const terminal = document.getElementById("terminal-content");
   const progressContainer = document.getElementById("progress-container");
   const progressBar = document.getElementById("progress-bar");
   const searchBtn = document.getElementById("searchBtn");
   const searchInput = document.getElementById("search");
   const searchModeEl = document.getElementById("searchMode");
+  const loginForm = document.getElementById("loginForm");
+  const welcomeMessage = document.getElementById("welcomeMessage");
+  const studentNameEl = document.getElementById("studentName");
+  const searchSection = document.getElementById("searchSection");
+  const resultsEl = document.getElementById("results");
 
   /* ------------ Utilities ------------ */
-  function logToTerminal(msg) {
-    terminal.textContent += "\n" + msg;
-    terminal.parentElement.scrollTop = terminal.parentElement.scrollHeight;
-  }
-
   function showToast(message, type = "error", duration = 3000) {
     const toast = document.getElementById('toast');
     toast.textContent = message;
@@ -297,15 +348,102 @@
       const res = await fetch(urls.command, { cache: "no-store" });
       if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
       const json = await res.json();
-      logToTerminal("[INFO] Command loaded: status=" + json.status);
       return json;
     } catch (e) {
-      logToTerminal("[WARN] Failed to load command.json: " + (e.stack || e.message));
+      console.error("Failed to load command.json:", e);
       return { status: "on", adminKey: "" };
     }
   }
 
-  /* ------------ Search ------------ */
+  async function fetchCSVData(url) {
+    try {
+      const response = await fetch(url, { cache: "no-store" });
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      return await response.text();
+    } catch (error) {
+      console.error("Error fetching CSV data:", error);
+      throw error;
+    }
+  }
+
+  function parseCSV(csvText) {
+    const lines = csvText.trim().split("\n");
+    const headers = lines[0].replace(/"/g, "").split(",");
+
+    return lines.slice(1).map((line) => {
+      const cells = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g)
+                        ?.map((cell) => cell.replace(/"/g, "")) || [];
+      let obj = {};
+      headers.forEach((h, i) => (obj[h.trim()] = (cells[i] ?? "").trim()));
+      return obj;
+    });
+  }
+
+  /* ------------ Login Functionality ------------ */
+  loginForm.addEventListener("submit", async function(e) {
+    e.preventDefault();
+    
+    const matricNo = document.getElementById("matricNo").value.trim();
+    const surname = document.getElementById("surname").value.trim();
+    
+    if (!matricNo || !surname) {
+      showToast("Please enter both matric number and surname", "warn");
+      return;
+    }
+
+    try {
+      // Show loading state
+      const loginBtn = loginForm.querySelector("button");
+      loginBtn.disabled = true;
+      loginBtn.textContent = "Verifying...";
+
+      // Check both datasets
+      const [morningData, spatData] = await Promise.all([
+        fetchCSVData(urls.morning),
+        fetchCSVData(urls.spat)
+      ]);
+
+      const morningRecords = parseCSV(morningData);
+      const spatRecords = parseCSV(spatData);
+
+      // Search for matching student
+      const foundStudent = [...morningRecords, ...spatRecords].find(student => {
+        const studentMatric = (student["Matric No"] || "").toLowerCase().trim();
+        const studentSurname = (student["Surname"] || "").toLowerCase().trim();
+        return studentMatric === matricNo.toLowerCase() && 
+               studentSurname === surname.toLowerCase();
+      });
+
+      if (foundStudent) {
+        // Successful login
+        showToast("Login successful!", "success");
+        
+        // Store student info
+        studentNameEl.textContent = `${foundStudent["Surname"]} ${foundStudent["Othernames"] || ''}`;
+        
+        // Hide login, show search interface
+        document.querySelector(".login-container").style.display = "none";
+        welcomeMessage.style.display = "block";
+        searchSection.style.display = "flex";
+        resultsEl.style.display = "block";
+        
+        // Focus search input
+        searchInput.focus();
+      } else {
+        showToast("Invalid credentials. Please try again.", "error");
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      showToast("Error verifying credentials. Please try again.", "error");
+    } finally {
+      // Reset login button
+      const loginBtn = loginForm.querySelector("button");
+      loginBtn.disabled = false;
+      loginBtn.textContent = "Login";
+    }
+  });
+
+  /* ------------ Search Functionality ------------ */
   async function performSearch() {
     const keyEntered = document.getElementById("adminKey").value.trim();
     const rawSearchVal = searchInput.value.trim();
@@ -319,73 +457,23 @@
       return;
     }
 
-    logToTerminal("[INFO] Checking command status...");
     const cmd = await fetchCommand();
-    logToTerminal(`[DEBUG] Command status: "${cmd.status}"`);
 
     if (cmd.status === "off") {
       if (keyEntered !== cmd.adminKey) {
         const shutdownMsg = cmd.message || "Tool is currently disabled by admin control.";
-        const msg = `[SYSTEM] 🚫 ${shutdownMsg}\nPlease enter a valid override key to continue.`;
-        terminal.textContent += `\n${msg}`;
         showToast(shutdownMsg + " Enter a valid override key to continue.", "warn", 4000);
         document.getElementById("results").innerHTML = "";
-        logToTerminal("[INFO] Search aborted due to disabled status and invalid override key.");
         return;
-      } else {
-        logToTerminal("[INFO] Valid override key entered, continuing despite disabled status.");
       }
     }
 
-    logToTerminal("[INFO] Fetching data for: " + selected.toUpperCase());
     progressContainer.style.display = "block";
     progressBar.style.width = "0%";
 
     try {
-      const response = await fetch(csvUrl, { cache: "no-store" });
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-
-      const reader = response.body.getReader();
-      const contentLength = +response.headers.get('Content-Length');
-      let receivedLength = 0;
-      let chunks = [];
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        chunks.push(value);
-        receivedLength += value.length;
-        if (contentLength) {
-          let progress = (receivedLength / contentLength) * 100;
-          progressBar.style.width = progress + "%";
-        }
-      }
-
-      let chunksAll = new Uint8Array(receivedLength);
-      let position = 0;
-      for (let chunk of chunks) {
-        chunksAll.set(chunk, position);
-        position += chunk.length;
-      }
-
-      const csv = new TextDecoder("utf-8").decode(chunksAll);
-
-      progressBar.style.width = "100%";
-      setTimeout(() => {
-        progressContainer.style.display = "none";
-        progressBar.style.width = "0%";
-      }, 500);
-
-      const lines = csv.trim().split("\n");
-      const headers = lines[0].replace(/"/g, "").split(",");
-
-      const records = lines.slice(1).map((line) => {
-        const cells = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g)
-                          ?.map((cell) => cell.replace(/"/g, "")) || [];
-        let obj = {};
-        headers.forEach((h, i) => (obj[h.trim()] = (cells[i] ?? "").trim()));
-        return obj;
-      });
+      const csv = await fetchCSVData(csvUrl);
+      const records = parseCSV(csv);
 
       // --- Search logic ---
       const searchValLower = rawSearchVal.toLowerCase();
@@ -399,7 +487,6 @@
             Object.values(row).some(val => val && pattern.test(val))
           );
         } catch (e) {
-          logToTerminal("[ERROR] Invalid regex pattern: " + (e.stack || e.message));
           showToast("Invalid regex pattern.", "warn");
           return;
         }
@@ -419,7 +506,6 @@
             )
           );
         } else {
-          logToTerminal("[WARN] Column filter format invalid. Use column:value");
           showToast("Column filter must be in format: column:value", "warn");
           return;
         }
@@ -429,10 +515,8 @@
         );
       }
 
-      logToTerminal(`[INFO] Found ${matched.length} result(s)`);
-
       if (matched.length === 0) {
-        document.getElementById("results").innerHTML = "<p>No match found.</p>";
+        resultsEl.innerHTML = "<p>No match found.</p>";
         return;
       }
 
@@ -448,7 +532,6 @@
       });
       html += "</table>";
 
-      const resultsEl = document.getElementById("results");
       resultsEl.innerHTML = html;
 
       // Delegate clicks for details
@@ -456,15 +539,19 @@
         a.addEventListener("click", (ev) => {
           ev.preventDefault();
           const record = JSON.parse(decodeURIComponent(a.getAttribute("data-record")));
-          showDetails(record, a); // pass the trigger for focus return
+          showDetails(record, a);
         });
       });
 
     } catch (err) {
-      logToTerminal("[ERROR] Failed to fetch/process data: " + (err.stack || err.message));
+      console.error("Search error:", err);
       showToast("Error: Failed to load student data.", "error", 4000);
-      progressContainer.style.display = "none";
-      progressBar.style.width = "0%";
+    } finally {
+      progressBar.style.width = "100%";
+      setTimeout(() => {
+        progressContainer.style.display = "none";
+        progressBar.style.width = "0%";
+      }, 500);
     }
   }
 
@@ -546,10 +633,8 @@
     studentPhoto.onerror = () => {
       studentPhoto.onerror = null; // prevent loop
       studentPhoto.src = "https://via.placeholder.com/120x160.png?text=No+Photo";
-      logToTerminal(`[WARN] No photo found for ${rawMatric}. Using fallback.`);
     };
 
-    logToTerminal(`[MODAL] Viewing details and photo of ${rawMatric}`);
     openModal();
   }
 
@@ -558,24 +643,6 @@
   searchInput.addEventListener("keydown", (e) => {
     if (e.key === "Enter") performSearch();
   });
-
-  /* ------------ Disclaimer / Boot ------------ */
-  const disclaimer = `
-[BOOT] Initializing screen...
-[NOTICE] This tool is for educational purposes only.
-[NOTICE] Do not use it to commit fraud or cybercrime.
-[TERMS] Usage implies acceptance of the terms.
-`;
-  
-  logToTerminal(disclaimer.trim());
-  function logout() {
-    localStorage.removeItem("student_matric");
-    localStorage.removeItem("student_surname");
-    
-
-
-  }
-
 </script>
 </body>
 </html>
