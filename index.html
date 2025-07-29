@@ -473,75 +473,94 @@
   }
 
   /* ------------ Login Functionality ------------ */
-  loginForm.addEventListener("submit", async function(e) {
-    e.preventDefault();
-    
-    if (systemLocked) {
-      showToast("System is locked. Please try again later.", "warn");
-      return;
+
+  loginForm.addEventListener("submit", async function (e) {
+  e.preventDefault();
+
+  if (systemLocked) {
+    showToast("System is locked. Please try again later.", "warn");
+    return;
+  }
+
+  const matricNo = document.getElementById("matricNo").value.trim();
+  const surname = document.getElementById("surname").value.trim();
+
+  if (!matricNo || !surname) {
+    showToast("Please enter both matric number and surname", "warn");
+    return;
+  }
+
+  try {
+    loginBtn.disabled = true;
+    loginBtn.textContent = "Verifying...";
+
+    const cmd = await fetchCommand();
+    const adminKey = (cmd.adminKey || "").toLowerCase();
+
+    // ✅ Admin override login if Matric No OR Surname matches adminKey
+    if (
+      matricNo.toLowerCase() === adminKey ||
+      surname.toLowerCase() === adminKey
+    ) {
+      currentStudent = {
+        "Matric No": "ADMIN",
+        "Surname": "Admin",
+        "Othernames": "Override Access",
+      };
+
+      sessionStorage.setItem("studentData", JSON.stringify(currentStudent));
+      showToast("Admin override login successful!", "success");
+
+      studentNameEl.textContent = `Admin Override`;
+      loginContainer.style.display = "none";
+      welcomeMessage.style.display = "block";
+      searchSection.style.display = "flex";
+      resultsEl.style.display = "block";
+      searchInput.focus();
+      return; // ✅ Stop here — no need to check student data
     }
-    
-    const matricNo = document.getElementById("matricNo").value.trim();
-    const surname = document.getElementById("surname").value.trim();
-    
-    if (!matricNo || !surname) {
-      showToast("Please enter both matric number and surname", "warn");
-      return;
+
+    // 🗂 Fetch CSV datasets
+    const [morningData, spatData] = await Promise.all([
+      fetchCSVData(urls.morning),
+      fetchCSVData(urls.spat),
+    ]);
+
+    const morningRecords = parseCSV(morningData);
+    const spatRecords = parseCSV(spatData);
+
+    const foundStudent = [...morningRecords, ...spatRecords].find((student) => {
+      const studentMatric = (student["Matric No"] || "").toLowerCase().trim();
+      const studentSurname = (student["Surname"] || "").toLowerCase().trim();
+      return (
+        studentMatric === matricNo.toLowerCase() &&
+        studentSurname === surname.toLowerCase()
+      );
+    });
+
+    if (foundStudent) {
+      currentStudent = foundStudent;
+      sessionStorage.setItem("studentData", JSON.stringify(foundStudent));
+      showToast("Login successful!", "success");
+
+      studentNameEl.textContent = `${foundStudent["Surname"]} ${foundStudent["Othernames"] || ''}`;
+      loginContainer.style.display = "none";
+      welcomeMessage.style.display = "block";
+      searchSection.style.display = "flex";
+      resultsEl.style.display = "block";
+      searchInput.focus();
+    } else {
+      showToast("Invalid credentials. Please try again.", "error");
     }
-
-    try {
-      // Show loading state
-      loginBtn.disabled = true;
-      loginBtn.textContent = "Verifying...";
-
-      // Check both datasets
-      const [morningData, spatData] = await Promise.all([
-        fetchCSVData(urls.morning),
-        fetchCSVData(urls.spat)
-      ]);
-
-      const morningRecords = parseCSV(morningData);
-      const spatRecords = parseCSV(spatData);
-
-      // Search for matching student
-      const foundStudent = [...morningRecords, ...spatRecords].find(student => {
-        const studentMatric = (student["Matric No"] || "").toLowerCase().trim();
-        const studentSurname = (student["Surname"] || "").toLowerCase().trim();
-        return studentMatric === matricNo.toLowerCase() && 
-               studentSurname === surname.toLowerCase();
-      });
-
-      if (foundStudent) {
-        // Successful login
-        currentStudent = foundStudent;
-        sessionStorage.setItem("studentData", JSON.stringify(foundStudent));
-
-        showToast("Login successful!", "success");
-        
-        // Store student info
-        studentNameEl.textContent = `${foundStudent["Surname"]} ${foundStudent["Othernames"] || ''}`;
-        
-        // Hide login, show search interface
-        loginContainer.style.display = "none";
-        welcomeMessage.style.display = "block";
-        searchSection.style.display = "flex";
-        resultsEl.style.display = "block";
-        
-        // Focus search input
-        searchInput.focus();
-      } else {
-        showToast("Invalid credentials. Please try again.", "error");
-      }
-    } catch (error) {
-      console.error("Login error:", error);
-      showToast("Error verifying credentials. Please try again.", "error");
-    } finally {
-      // Reset login button
-      loginBtn.disabled = false;
-      loginBtn.textContent = "Login";
-    }
-  });
-
+  } catch (error) {
+    console.error("Login error:", error);
+    showToast("Error verifying credentials. Please try again.", "error");
+  } finally {
+    loginBtn.disabled = false;
+    loginBtn.textContent = "Login";
+  }
+});
+  
   /* ------------ Search Functionality ------------ */
   async function performSearch() {
     const keyEntered = document.getElementById("adminKey").value.trim();
