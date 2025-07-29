@@ -189,7 +189,7 @@
         localStorage.setItem("student_surname", "Admin");
         showOverlay("Admin bypass successful. Redirecting...");
         showToast("Admin login granted", true);
-        setTimeout(() => location.href = "alpha.html", 1000);
+        setTimeout(() => location.href = "https://raw.githubusercontent.com/mrkamar/student-records/main/alpha.html", 1000);
         return;
       }
 
@@ -199,7 +199,7 @@
         localStorage.setItem("student_surname", surname);
         showOverlay("Access granted. Redirecting...");
         showToast("Login successful!", true);
-        setTimeout(() => location.href = "alpha.html", 1500);
+        setTimeout(() => location.href = "https://raw.githubusercontent.com/mrkamar/student-records/main/alpha.html", 1500);
       } else {
         hideOverlay();
         showToast("Access denied. Only registered students allowed.");
