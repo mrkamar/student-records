@@ -455,18 +455,13 @@
       const cmd = await fetchCommand();
       systemLocked = cmd.status === "off";
       
-      if (systemLocked) {
-        // Apply locked state to login container
-        loginContainer.classList.add("system-locked");
-        loginBtn.disabled = true;
-        
-        // Show lock message
-        const lockMessage = cmd.message || "The system is currently locked by administrator.";
-        showToast(lockMessage, "warn", 5000);
-      } else {
-        loginContainer.classList.remove("system-locked");
-        loginBtn.disabled = false;
-      }
+      if (cmd.status === "off") {
+  systemLocked = true;
+  console.log("System is locked. Only admin override is allowed.");
+} else {
+  systemLocked = false;
+}
+
     } catch (error) {
       console.error("Error checking system status:", error);
     }
@@ -474,13 +469,8 @@
 
   /* ------------ Login Functionality ------------ */
 
-  loginForm.addEventListener("submit", async function (e) {
+loginForm.addEventListener("submit", async function (e) {
   e.preventDefault();
-
-  if (systemLocked) {
-    showToast("System is locked. Please try again later.", "warn");
-    return;
-  }
 
   const matricNo = document.getElementById("matricNo").value.trim();
   const surname = document.getElementById("surname").value.trim();
@@ -496,12 +486,19 @@
 
     const cmd = await fetchCommand();
     const adminKey = (cmd.adminKey || "").toLowerCase();
-
-    // ✅ Admin override login if Matric No OR Surname matches adminKey
-    if (
+    const isAdmin = (
       matricNo.toLowerCase() === adminKey ||
       surname.toLowerCase() === adminKey
-    ) {
+    );
+
+    // 🚫 Block regular users if system is locked
+    if (cmd.status === "off" && !isAdmin) {
+      showToast(cmd.message || "System is currently locked by admin.", "warn", 4000);
+      return;
+    }
+
+    // ✅ Admin override login
+    if (isAdmin) {
       currentStudent = {
         "Matric No": "ADMIN",
         "Surname": "Admin",
@@ -517,10 +514,10 @@
       searchSection.style.display = "flex";
       resultsEl.style.display = "block";
       searchInput.focus();
-      return; // ✅ Stop here — no need to check student data
+      return;
     }
 
-    // 🗂 Fetch CSV datasets
+    // 🗂 Regular student login
     const [morningData, spatData] = await Promise.all([
       fetchCSVData(urls.morning),
       fetchCSVData(urls.spat),
@@ -560,6 +557,7 @@
     loginBtn.textContent = "Login";
   }
 });
+
   
   /* ------------ Search Functionality ------------ */
   async function performSearch() {
