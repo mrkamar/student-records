@@ -1,5 +1,5 @@
 {
-  "status": "on",
-  "message": "Tool is active.",
+  "status": "off",
+  "message": "Tool is Disabled",
   "adminKey": "17760"
 }
