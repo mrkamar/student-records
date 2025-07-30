@@ -343,7 +343,7 @@
       <option value="default">Contains</option>
       <option value="exact">Exact Match</option>
       <option value="regex">Regex</option>
-      <option value="column">Column Filter</option>
+      <option value="fuzzy">Fuzzy</option>
     </select>
 
     <input type="text" id="search" placeholder="Enter Name, Matric No, etc" title="Search input" aria-label="Search field" />
@@ -368,6 +368,8 @@
   </div>
 
   <div id="toast" role="status" aria-live="polite"></div>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2/dist/fuse.min.js"></script>
 
 <script>
   const urls = {
@@ -437,17 +439,16 @@
   }
 
   function parseCSV(csvText) {
-    const lines = csvText.trim().split("\n");
-    const headers = lines[0].replace(/"/g, "").split(",");
+  const parsed = Papa.parse(csvText, {
+    header: true,
+    skipEmptyLines: true,
+    transformHeader: h => h.trim().replace(/\s+/g, " "), // clean up keys
+    transform: val => val?.trim() // clean up values
+  });
 
-    return lines.slice(1).map((line) => {
-      const cells = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g)
-                        ?.map((cell) => cell.replace(/"/g, "")) || [];
-      let obj = {};
-      headers.forEach((h, i) => (obj[h.trim()] = (cells[i] ?? "").trim()));
-      return obj;
-    });
-  }
+  return parsed.data;
+}
+
 
   /* ------------ System Lock Handling ------------ */
   async function checkSystemStatus() {
@@ -612,21 +613,52 @@ loginForm.addEventListener("submit", async function (e) {
         matched = records.filter(row =>
           Object.values(row).some(val => val && val.toLowerCase() === needle)
         );
-      } else if (mode === "column") {
-        const parts = rawSearchVal.split(":");
-        if (parts.length === 2) {
-          const col = parts[0].trim().toLowerCase();
-          const val = parts[1].trim().toLowerCase();
-          matched = records.filter(row =>
-            Object.entries(row).some(
-              ([k, v]) => k.toLowerCase() === col && (v || "").toLowerCase().includes(val)
-            )
-          );
-        } else {
-          showToast("Column filter must be in format: column:value", "warn");
-          return;
+   } else if (mode === "fuzzy") {
+  try {
+    const normalize = str =>
+      (str || "")
+        .toLowerCase()
+        .replace(/[^a-z0-9]/gi, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+
+    const tokens = normalize(rawSearchVal).split(" ").filter(Boolean);
+
+    matched = records.filter(row => {
+      const combined = [
+        row["Surname"],
+        row["Othernames"],
+        row["Phone"],
+        row["Email"],
+        row["Class"],
+        row["Programme"],
+        row["Department"],
+        row["Course"],
+        row["School/Faculty"]
+      ]
+        .filter(Boolean)
+        .map(normalize)
+        .join(" ");
+
+      return tokens.every(token => {
+        if (token === "nd") {
+          return ["nd", "nd1", "nd2", "nd3"].some(nd => combined.includes(nd));
         }
-      } else {
+        if (token === "hnd") {
+          return ["hnd", "hnd1", "hnd2", "hnd3"].some(hnd => combined.includes(hnd));
+        }
+        return combined.includes(token);
+      });
+    });
+
+    showToast(`Fuzzy matched ${matched.length} result(s)`, "success", 3500);
+  } catch (e) {
+    console.error("Fuzzy search error:", e);
+    showToast("Fuzzy search failed", "error");
+  }
+}
+
+ else {
         matched = records.filter(row =>
           Object.values(row).some(val => val && val.toLowerCase().includes(searchValLower))
         );
