@@ -9,6 +9,12 @@
       background-color: #000;
       color: #0f0;
       font-family: 'Courier New', Courier, monospace;
+      overflow: hidden;
+      animation: fadeIn 1s ease-in;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
     }
     .container {
       margin-top: 100px;
@@ -16,56 +22,43 @@
       background-color: #111;
       padding: 30px;
       border-radius: 10px;
-      box-shadow: 0 0 15px #0f0;
+      box-shadow: 0 0 20px #0f0;
+      animation: glow 2s infinite alternate;
     }
-    .btn-green {
-      background-color: #0f0;
-      color: #000;
-      font-weight: bold;
+    @keyframes glow {
+      from { box-shadow: 0 0 10px #0f0; }
+      to { box-shadow: 0 0 20px #0f0; }
+    }
+    .form-label, .form-select, h2 {
+      animation: fadeIn 1.2s ease-in-out;
+    }
+    .btn-outline-light {
+      margin-top: 20px;
     }
   </style>
   <script>
-    function setFormTarget() {
+    function redirectToPortal() {
       const session = document.getElementById("session").value;
-      const matric = document.getElementById("regno").value.trim();
-
-      if (!matric) {
-        alert("Please enter your matric number.");
-        return false;
+      if (session === "morning") {
+        window.location.href = "https://auchipoly-online.com/result_login.php";
+      } else if (session === "spat") {
+        window.location.href = "https://auchipolyspats.com/result_login.php";
       }
-
-      const host = session === "morning"
-        ? "http://auchipoly-online.com"
-        : "http://auchipolyspats.com";
-
-      const form = document.getElementById("loginForm");
-      form.action = host + "/result_processlogin.php?action=login";
-      document.getElementById("pwd").value = matric;
-
-      return true;
     }
   </script>
 </head>
 <body>
   <div class="container text-center">
     <h2>🎓 Check Result</h2>
-    <form id="loginForm" method="POST" target="_blank" onsubmit="return setFormTarget();">
-      <div class="mb-3 text-start">
-        <label for="session" class="form-label">Select Session</label>
-        <select id="session" name="session" class="form-select">
-          <option value="morning">Morning</option>
-          <option value="spat">Spat</option>
-        </select>
-      </div>
-      <div class="mb-3 text-start">
-        <label for="regno" class="form-label">Matric Number</label>
-        <input type="text" id="regno" name="regno" class="form-control" required>
-      </div>
-      <input type="hidden" id="pwd" name="pwd" />
-      <input type="hidden" name="submit" value="Login" />
-      <button type="submit" class="btn btn-green w-100">Proceed</button>
-      <a href="index.html" class="btn btn-outline-light w-100 mt-2">Go Back</a>
-    </form>
+    <div class="mb-3 text-start">
+      <label for="session" class="form-label">Select Session (Morning or Spat)</label>
+      <select id="session" name="session" class="form-select" onchange="redirectToPortal();" required>
+        <option disabled selected value="">-- Choose --</option>
+        <option value="morning">Morning</option>
+        <option value="spat">Spat</option>
+      </select>
+    </div>
+    <a href="index.html" class="btn btn-outline-light w-100">Go Back</a>
   </div>
 </body>
 </html>
